@@ -1,0 +1,54 @@
+# Expo / EAS
+.expo/
+.eas/
+expo-env.d.ts
+dist/
+web-build/
+
+# Dependências
+node_modules/
+
+# Pastas nativas geradas pelo prebuild do Expo
+/android/
+/ios/
+
+# Variáveis de ambiente locais
+.env
+.env.*
+!/.env.example
+
+# Estado local do Supabase CLI
+supabase/.temp/
+supabase/.branches/
+
+# Credenciais, chaves privadas e certificados
+credentials.json
+service-account*.json
+service_account*.json
+*-service-account*.json
+*-service_account*.json
+*.jks
+*.keystore
+*.p12
+*.pfx
+*.pem
+*.p8
+*.key
+
+# Logs e artefatos locais de build
+*.log
+android/.gradle/
+android/app/build/
+ios/Pods/
+
+# Sistema
+.DS_Store
+Thumbs.db
+desktop.ini
+/google-services.json
+.vscode/
+/AGENTS.md
+*.backup-*
+/supabase/
+/scripts/
+*.backup-*

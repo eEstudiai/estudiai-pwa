@@ -1,0 +1,56 @@
+{
+    "expo":  {
+                 "name":  "EstudaIA",
+                 "slug":  "estudiai",
+                 "scheme":  "estudiai",
+                 "version":  "0.1.0",
+                 "orientation":  "portrait",
+                 "icon":  "./assets/icon.png",
+                 "plugins":  [
+                                 "expo-router",
+                                 [
+                                     "expo-splash-screen",
+                                     {
+                                         "backgroundColor":  "#0B3FA8",
+                                         "image":  "./assets/splash.png",
+                                         "imageWidth":  300,
+                                         "resizeMode":  "contain"
+                                     }
+                                 ],
+                                 "expo-secure-store",
+                                 "expo-iap",
+                                 "expo-web-browser",
+                                 "expo-notifications",
+                                 [
+                                     "expo-build-properties",
+                                     {
+                                         "android":  {
+                                                         "enableMinifyInReleaseBuilds":  true
+                                                     }
+                                     }
+                                 ],
+                                 "./plugins/with-r8-optimize-preset"
+                             ],
+                 "ios":  {
+                             "supportsTablet":  true,
+                             "bundleIdentifier":  "com.estudiai.app",
+                             "icon":  "./assets/icon.png"
+                         },
+                 "android":  {
+                                 "package":  "com.estudiai.app",
+                                 "googleServicesFile":  "./google-services.json",
+                                 "adaptiveIcon":  {
+                                                      "foregroundImage":  "./assets/icon.png",
+                                                      "backgroundColor":  "#0B4DBA"
+                                                  }
+                             },
+                 "extra":  {
+                               "router":  {
+
+                                          },
+                               "eas":  {
+                                           "projectId":  "0ec7ea02-d3fc-4997-8a09-cbc0afd76d0d"
+                                       }
+                           }
+             }
+}
