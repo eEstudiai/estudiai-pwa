@@ -133,7 +133,10 @@ export default function PromotionalNotificationsSettings() {
           <Switch
             value={ativado}
             onValueChange={alterarPreferencia}
-            disabled={Platform.OS !== "android" || processando}
+            disabled={
+              (Platform.OS !== "android" && Platform.OS !== "web") ||
+              processando
+            }
             trackColor={{ false: "#CBD5E1", true: "#93B4F5" }}
             thumbColor={ativado ? "#0B3FA8" : "#F8FAFC"}
           />
@@ -149,7 +152,12 @@ export default function PromotionalNotificationsSettings() {
         }}
       >
         A adesão é opcional e começa desativada. Você pode cancelar o
-        recebimento a qualquer momento. Disponível inicialmente para Android.
+        recebimento a qualquer momento.
+        {Platform.OS === "web"
+          ? " No PWA, o navegador precisa permitir notificações e o site deve estar em HTTPS."
+          : Platform.OS === "android"
+          ? " Disponível no Android."
+          : " Disponível no PWA e Android."}
       </Text>
       {erroPreferencia && (
         <Text

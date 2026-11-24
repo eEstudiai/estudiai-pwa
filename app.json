@@ -5,6 +5,9 @@
                  "scheme":  "estudiai",
                  "version":  "0.1.0",
                  "orientation":  "portrait",
+                 "web":  {
+                             "output":  "single"
+                         },
                  "icon":  "./assets/icon.png",
                  "plugins":  [
                                  "expo-router",

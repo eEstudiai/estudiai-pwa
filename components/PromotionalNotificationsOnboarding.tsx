@@ -22,9 +22,11 @@ export default function PromotionalNotificationsOnboarding() {
   const [userId, setUserId] = useState<string | null>(null);
   const [visivel, setVisivel] = useState(false);
   const [processando, setProcessando] = useState(false);
+  const plataformaSuportada =
+    Platform.OS === "android" || Platform.OS === "web";
 
   useEffect(() => {
-    if (Platform.OS !== "android") return;
+    if (!plataformaSuportada) return;
 
     let ativo = true;
     let timeout: ReturnType<typeof setTimeout> | undefined;
@@ -71,7 +73,7 @@ export default function PromotionalNotificationsOnboarding() {
     async function verificarConvite() {
       setVisivel(false);
 
-      if (!userId || Platform.OS !== "android") return;
+      if (!userId || !plataformaSuportada) return;
 
       try {
         const deveExibir =
@@ -128,7 +130,7 @@ export default function PromotionalNotificationsOnboarding() {
     }
   }
 
-  if (Platform.OS !== "android") return null;
+  if (!plataformaSuportada) return null;
 
   return (
     <Modal

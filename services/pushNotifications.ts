@@ -7,6 +7,56 @@ import { supabase } from "./supabase";
 
 const CHANNEL_ID = "estudiai-promotional";
 
+function decodeVapidPublicKey(value: string): Uint8Array {
+  const base64 = value.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, "=");
+  const raw = atob(padded);
+  return Uint8Array.from(raw, (character) => character.charCodeAt(0));
+}
+
+async function enableWebPromotionalNotifications(): Promise<void> {
+  if (
+    typeof window === "undefined" ||
+    !window.isSecureContext ||
+    !("Notification" in window) ||
+    !("serviceWorker" in navigator) ||
+    !("PushManager" in window)
+  ) {
+    throw new Error(
+      "Este navegador não oferece suporte a notificações push. Use a versão instalada do PWA em uma conexão HTTPS.",
+    );
+  }
+
+  const publicKey = process.env.EXPO_PUBLIC_WEB_PUSH_PUBLIC_KEY?.trim();
+  if (!publicKey) {
+    throw new Error("As notificações do PWA ainda não foram configuradas no servidor.");
+  }
+
+  let permission = Notification.permission;
+  if (permission !== "granted") permission = await Notification.requestPermission();
+  if (permission !== "granted") {
+    throw new Error("A permissão de notificações não foi concedida no navegador.");
+  }
+
+  const registration = await navigator.serviceWorker.ready;
+  let subscription = await registration.pushManager.getSubscription();
+  if (!subscription) {
+    subscription = await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: decodeVapidPublicKey(publicKey) as BufferSource,
+    });
+  }
+
+  const { error } = await supabase.functions.invoke("register-push-device", {
+    body: {
+      action: "enable",
+      platform: "web",
+      webPushSubscription: subscription.toJSON(),
+    },
+  });
+  if (error) throw error;
+}
+
 export const PROMOTIONAL_INVITATION_VERSION = "v1";
 /**
  * Consulta a preferência promocional da conta autenticada.
@@ -97,6 +147,11 @@ export async function markPromotionalInvitationHandled(): Promise<void> {
  * somente após o consentimento explícito.
  */
 export async function enablePromotionalNotifications(): Promise<void> {
+  if (Platform.OS === "web") {
+    await enableWebPromotionalNotifications();
+    return;
+  }
+
   if (Platform.OS !== "android") {
     throw new Error(
       "Notificações promocionais estão disponíveis inicialmente apenas no Android.",
