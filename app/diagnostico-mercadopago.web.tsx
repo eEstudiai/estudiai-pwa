@@ -12,7 +12,7 @@ import { supabase } from "../services/supabase";
 
 const DIAGNOSTIC_KEYS = [
   "accessTokenPresent",
-  "accessTokenHasTestPrefix",
+  "accessTokenHasAppUsrPrefix",
   "webhookSecretPresent",
   "backUrlValid",
   "expirySecretPresent",
@@ -25,7 +25,7 @@ type DiagnosticResult = Record<DiagnosticKey, boolean>;
 
 const DIAGNOSTIC_LABELS: Record<DiagnosticKey, string> = {
   accessTokenPresent: "Token presente",
-  accessTokenHasTestPrefix: "Prefixo TEST-",
+  accessTokenHasAppUsrPrefix: "Prefixo APP_USR",
   webhookSecretPresent: "Webhook secret presente",
   backUrlValid: "URL de retorno válida",
   expirySecretPresent: "Secret de expiração presente",
