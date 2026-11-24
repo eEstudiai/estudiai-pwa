@@ -54,6 +54,9 @@
                                "eas":  {
                                            "projectId":  "0ec7ea02-d3fc-4997-8a09-cbc0afd76d0d"
                                        }
-                           }
+                           },
+                 "experiments":  {
+                                     "baseUrl":  "/estudiai-pwa"
+                                 }
              }
 }
