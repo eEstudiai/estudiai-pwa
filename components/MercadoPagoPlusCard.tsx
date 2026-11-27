@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -13,6 +13,7 @@ import { supabase } from "../services/supabase";
 type PlusOffer = {
   success: boolean;
   configured: boolean;
+  plan: "free" | "plus";
   monthlyAmount: number | null;
   currencyId: string;
   provider: string | null;
@@ -23,10 +24,34 @@ type PlusOffer = {
   webSubscriptionExpiresAt: string | null;
 };
 
+type SyncAttempt = "activated" | "pending" | "rate_limited" | "failed";
+
 type Props = {
   isPlus: boolean;
   onPlanUpdated: () => Promise<void>;
 };
+
+function getHttpStatus(error: unknown): number | undefined {
+  if (typeof error !== "object" || error === null) {
+    return undefined;
+  }
+
+  if ("status" in error && typeof error.status === "number") {
+    return error.status;
+  }
+
+  if (
+    "context" in error &&
+    typeof error.context === "object" &&
+    error.context !== null &&
+    "status" in error.context &&
+    typeof error.context.status === "number"
+  ) {
+    return error.context.status;
+  }
+
+  return undefined;
+}
 
 function avisar(titulo: string, mensagem: string) {
   if (typeof window !== "undefined") {
@@ -51,21 +76,56 @@ export default function MercadoPagoPlusCard({
   const [loading, setLoading] = useState(true);
   const [working, setWorking] = useState(false);
   const [notice, setNotice] = useState("");
+  const [returnedFromMercadoPago, setReturnedFromMercadoPago] = useState(false);
+  const [confirmingPayment, setConfirmingPayment] = useState(false);
+  const syncInFlight = useRef(false);
+  const onPlanUpdatedRef = useRef(onPlanUpdated);
+  onPlanUpdatedRef.current = onPlanUpdated;
 
-  const loadOffer = useCallback(async () => {
-    setLoading(true);
+  const loadOffer = useCallback(async (
+    showLoading = true,
+  ): Promise<PlusOffer | null> => {
+    if (showLoading) setLoading(true);
     const { data, error } = await supabase.functions.invoke(
       "mercadopago-plus",
       { body: { action: "offer" } },
     );
     if (error || !data?.success) {
-      setOffer(null);
-      setNotice("Não foi possível consultar a oferta agora.");
-      setLoading(false);
-      return;
+      if (showLoading) {
+        setOffer(null);
+        setNotice("Não foi possível consultar a oferta agora.");
+        setLoading(false);
+      }
+      return null;
     }
-    setOffer(data as PlusOffer);
-    setLoading(false);
+
+    const nextOffer = data as PlusOffer;
+    setOffer(nextOffer);
+    if (showLoading) setLoading(false);
+    return nextOffer;
+  }, []);
+
+  const syncMercadoPago = useCallback(async (): Promise<SyncAttempt> => {
+    if (syncInFlight.current) {
+      return "rate_limited";
+    }
+
+    syncInFlight.current = true;
+    try {
+      const { data, error } = await supabase.functions.invoke(
+        "mercadopago-plus",
+        { body: { action: "sync" } },
+      );
+
+      if (error) {
+        return getHttpStatus(error) === 429 ? "rate_limited" : "failed";
+      }
+      if (data?.activated === true) return "activated";
+      if (data?.pending === true) return "pending";
+      return "failed";
+    } finally {
+      syncInFlight.current = false;
+    }
   }, []);
 
   useEffect(() => {
@@ -73,12 +133,81 @@ export default function MercadoPagoPlusCard({
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       if (params.get("mp") === "return") {
-        setNotice(
-          "Retorno do Mercado Pago recebido. Estamos aguardando a confirmação segura do pagamento.",
-        );
+        setReturnedFromMercadoPago(true);
+        setNotice("Confirmando seu pagamento…");
       }
     }
   }, [loadOffer]);
+
+  const shouldPoll =
+    returnedFromMercadoPago ||
+    (
+      !isPlus &&
+      offer?.plan === "free" &&
+      offer.webSubscriptionStatus === "authorized"
+    );
+
+  useEffect(() => {
+    if (!shouldPoll || isPlus) {
+      setConfirmingPayment(false);
+      return;
+    }
+
+    let active = true;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const stopAt = Date.now() + 3 * 60 * 1000;
+
+    setConfirmingPayment(true);
+    setNotice("Confirmando seu pagamento…");
+
+    const poll = async () => {
+      const attempt = await syncMercadoPago();
+      if (!active) return;
+
+      if (attempt === "activated") {
+        await onPlanUpdatedRef.current();
+        await loadOffer(false);
+        if (active) {
+          setConfirmingPayment(false);
+          setNotice("Pagamento confirmado.");
+        }
+        return;
+      }
+
+      if (attempt !== "rate_limited") {
+        const refreshedOffer = await loadOffer(false);
+        if (!active) return;
+
+        if (refreshedOffer?.plan === "plus") {
+          await onPlanUpdatedRef.current();
+          if (active) {
+            setConfirmingPayment(false);
+            setNotice("Pagamento confirmado.");
+          }
+          return;
+        }
+      }
+
+      if (Date.now() >= stopAt) {
+        setConfirmingPayment(false);
+        setNotice(
+          "A confirmação ainda está pendente. Você pode tentar Atualizar status.",
+        );
+        return;
+      }
+
+      timer = setTimeout(() => {
+        void poll();
+      }, 5_000);
+    };
+
+    void poll();
+
+    return () => {
+      active = false;
+      if (timer !== null) clearTimeout(timer);
+    };
+  }, [isPlus, loadOffer, shouldPoll, syncMercadoPago]);
 
   const iniciarCheckout = async () => {
     setWorking(true);
@@ -135,8 +264,18 @@ export default function MercadoPagoPlusCard({
   const atualizarStatus = async () => {
     setWorking(true);
     try {
-      await loadOffer();
+      const attempt = await syncMercadoPago();
+      if (attempt === "rate_limited") {
+        setNotice("A consulta está em andamento. Aguarde alguns segundos.");
+      } else if (attempt === "failed") {
+        setNotice("Não foi possível consultar agora. Tente novamente.");
+      }
+
+      const refreshedOffer = await loadOffer(false);
       await onPlanUpdated();
+      if (refreshedOffer?.plan === "plus") {
+        setNotice("Pagamento confirmado.");
+      }
     } finally {
       setWorking(false);
     }
@@ -212,12 +351,13 @@ export default function MercadoPagoPlusCard({
           )}
           <Pressable
             accessibilityRole="button"
-            disabled={working || !offer?.configured}
+            disabled={working || confirmingPayment || !offer?.configured}
             onPress={iniciarCheckout}
             style={({ pressed }) => [
               styles.primaryButton,
               pressed && styles.pressed,
-              (working || !offer?.configured) && styles.disabled,
+              (working || confirmingPayment || !offer?.configured) &&
+                styles.disabled,
             ]}
           >
             {working ? (
