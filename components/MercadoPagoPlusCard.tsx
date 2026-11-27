@@ -395,8 +395,8 @@ export default function MercadoPagoPlusCard({
         </Pressable>
       ) : null}
       <Text style={styles.muted}>
-        O Plus é associado à sua conta EstudaIA e pode ser usado também no app
-        Android. Gerencie a assinatura pela plataforma em que ela foi criada.
+        O Plus é associado à sua conta EstudaIA e vale para a versão web.
+        Você pode cancelar a renovação quando quiser.
       </Text>
     </View>
   );
