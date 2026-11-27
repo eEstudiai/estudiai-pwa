@@ -15,6 +15,7 @@ type PlusOffer = {
   configured: boolean;
   plan: "free" | "plus";
   monthlyAmount: number | null;
+  cardPublicKey: string | null;
   currencyId: string;
   provider: string | null;
   subscriptionStatus: string | null;
@@ -61,6 +62,47 @@ function avisar(titulo: string, mensagem: string) {
   Alert.alert(titulo, mensagem);
 }
 
+type CardBrickController = { unmount: () => void };
+
+type MercadoPagoGlobal = new (
+  publicKey: string,
+  options?: { locale?: string },
+) => {
+  bricks: () => {
+    create: (
+      name: string,
+      containerId: string,
+      settings: Record<string, unknown>,
+    ) => Promise<CardBrickController>;
+  };
+};
+
+const CARD_BRICK_CONTAINER_ID = "mp-card-brick";
+const MP_SDK_URL = "https://sdk.mercadopago.com/js/v2";
+
+function loadMercadoPagoSdk(): Promise<MercadoPagoGlobal> {
+  return new Promise((resolve, reject) => {
+    const existing = (window as unknown as { MercadoPago?: MercadoPagoGlobal })
+      .MercadoPago;
+    if (existing) {
+      resolve(existing);
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = MP_SDK_URL;
+    script.async = true;
+    script.onload = () => {
+      const loaded = (window as unknown as { MercadoPago?: MercadoPagoGlobal })
+        .MercadoPago;
+      if (loaded) resolve(loaded);
+      else reject(new Error("mercadopago_sdk_missing"));
+    };
+    script.onerror = () => reject(new Error("mercadopago_sdk_failed"));
+    document.head.appendChild(script);
+  });
+}
+
 function formatarData(value: string | null) {
   if (!value) return "";
   const date = new Date(value);
@@ -78,6 +120,8 @@ export default function MercadoPagoPlusCard({
   const [notice, setNotice] = useState("");
   const [returnedFromMercadoPago, setReturnedFromMercadoPago] = useState(false);
   const [confirmingPayment, setConfirmingPayment] = useState(false);
+  const [showCardForm, setShowCardForm] = useState(false);
+  const [cardFormError, setCardFormError] = useState("");
   const syncInFlight = useRef(false);
   const onPlanUpdatedRef = useRef(onPlanUpdated);
   onPlanUpdatedRef.current = onPlanUpdated;
@@ -208,6 +252,90 @@ export default function MercadoPagoPlusCard({
       if (timer !== null) clearTimeout(timer);
     };
   }, [isPlus, loadOffer, shouldPoll, syncMercadoPago]);
+
+  const cardPublicKey = offer?.cardPublicKey ?? null;
+  const cardAmount = offer?.monthlyAmount ?? null;
+
+  useEffect(() => {
+    if (!showCardForm || !cardPublicKey || typeof cardAmount !== "number") {
+      return;
+    }
+
+    let active = true;
+    let controller: CardBrickController | null = null;
+    setCardFormError("");
+
+    void (async () => {
+      try {
+        const { data: userData } = await supabase.auth.getUser();
+        const email = userData.user?.email;
+        const MercadoPago = await loadMercadoPagoSdk();
+        if (!active) return;
+
+        const mp = new MercadoPago(cardPublicKey, { locale: "pt-BR" });
+        controller = await mp.bricks().create(
+          "cardPayment",
+          CARD_BRICK_CONTAINER_ID,
+          {
+            initialization: {
+              amount: cardAmount,
+              ...(email ? { payer: { email } } : {}),
+            },
+            customization: {
+              paymentMethods: { minInstallments: 1, maxInstallments: 1 },
+            },
+            callbacks: {
+              onReady: () => {},
+              onSubmit: async (formData: { token?: string }) => {
+                const token = formData?.token;
+                if (typeof token !== "string") {
+                  throw new Error("card_token_missing");
+                }
+
+                const { data, error } = await supabase.functions.invoke(
+                  "mercadopago-plus",
+                  { body: { action: "checkout_card", cardToken: token } },
+                );
+
+                if (error || data?.success !== true) {
+                  const status = getHttpStatus(error);
+                  setCardFormError(
+                    status === 409
+                      ? "Já existe um pagamento em confirmação. Toque em Atualizar status."
+                      : "Não foi possível concluir a assinatura com este cartão. Confira os dados ou tente outro cartão.",
+                  );
+                  throw new Error("card_checkout_failed");
+                }
+
+                setShowCardForm(false);
+                setReturnedFromMercadoPago(true);
+                await loadOffer(false);
+              },
+              onError: (brickError: unknown) => {
+                console.error("Mercado Pago card form error:", brickError);
+              },
+            },
+          },
+        );
+      } catch (error) {
+        console.error("Mercado Pago card form failed to load:", error);
+        if (active) {
+          setCardFormError(
+            "Não foi possível carregar o formulário de cartão. Tente novamente.",
+          );
+        }
+      }
+    })();
+
+    return () => {
+      active = false;
+      try {
+        controller?.unmount();
+      } catch {
+        // O formulário já pode ter sido removido da página.
+      }
+    };
+  }, [showCardForm, cardPublicKey, cardAmount, loadOffer]);
 
   const iniciarCheckout = async () => {
     setWorking(true);
@@ -349,28 +477,81 @@ export default function MercadoPagoPlusCard({
               </Text>
             </>
           )}
+          {offer?.configured &&
+          cardPublicKey &&
+          offer.webSubscriptionStatus !== "pending" &&
+          offer.webSubscriptionStatus !== "authorized" ? (
+            showCardForm ? (
+              <>
+                <View
+                  nativeID={CARD_BRICK_CONTAINER_ID}
+                  style={styles.cardBrick}
+                />
+                {cardFormError ? (
+                  <Text style={styles.notice}>{cardFormError}</Text>
+                ) : null}
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => setShowCardForm(false)}
+                  style={({ pressed }) => [
+                    styles.secondaryButton,
+                    pressed && styles.pressed,
+                  ]}
+                >
+                  <Text style={styles.secondaryButtonText}>Voltar</Text>
+                </Pressable>
+              </>
+            ) : (
+              <Pressable
+                accessibilityRole="button"
+                disabled={working || confirmingPayment}
+                onPress={() => setShowCardForm(true)}
+                style={({ pressed }) => [
+                  styles.primaryButton,
+                  pressed && styles.pressed,
+                  (working || confirmingPayment) && styles.disabled,
+                ]}
+              >
+                <Text style={styles.primaryButtonText}>
+                  Assinar com cartão
+                </Text>
+              </Pressable>
+            )
+          ) : null}
+          {showCardForm ? null : (
           <Pressable
             accessibilityRole="button"
             disabled={working || confirmingPayment || !offer?.configured}
             onPress={iniciarCheckout}
             style={({ pressed }) => [
-              styles.primaryButton,
+              cardPublicKey ? styles.secondaryButton : styles.primaryButton,
               pressed && styles.pressed,
               (working || confirmingPayment || !offer?.configured) &&
                 styles.disabled,
             ]}
           >
             {working ? (
-              <ActivityIndicator color="#FFFFFF" />
+              <ActivityIndicator
+                color={cardPublicKey ? "#0B3FA8" : "#FFFFFF"}
+              />
             ) : (
-              <Text style={styles.primaryButtonText}>
+              <Text
+                style={
+                  cardPublicKey
+                    ? styles.secondaryButtonText
+                    : styles.primaryButtonText
+                }
+              >
                 {offer?.webSubscriptionStatus === "pending" ||
                 offer?.webSubscriptionStatus === "authorized"
                   ? "Continuar checkout"
-                  : "Assinar pelo Mercado Pago"}
+                  : cardPublicKey
+                    ? "Pagar com conta Mercado Pago"
+                    : "Assinar pelo Mercado Pago"}
               </Text>
             )}
           </Pressable>
+          )}
           {!offer?.configured ? (
             <Text style={styles.muted}>
               Checkout de teste ainda não configurado no servidor.
@@ -486,6 +667,7 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     marginTop: 12,
   },
+  cardBrick: { marginTop: 16, minHeight: 120, width: "100%" },
   pressed: { opacity: 0.8 },
   disabled: { opacity: 0.5 },
 });
