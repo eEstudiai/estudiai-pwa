@@ -138,6 +138,15 @@ export default function AuthCallback() {
   }
 
   if (erro) {
+    /*
+      Quando o link do e-mail é aberto em outro navegador ou aparelho
+      (por exemplo, o cadastro foi feito no computador e o e-mail foi
+      aberto no celular), o verificador PKCE não existe nesse navegador.
+      A confirmação do e-mail já foi feita pelo Supabase; só não é
+      possível criar a sessão aqui. Mostramos uma orientação clara.
+    */
+    const outroNavegador = /code verifier/i.test(erro);
+
     return (
       <View style={styles.container}>
         <Text style={styles.logo}>
@@ -145,11 +154,15 @@ export default function AuthCallback() {
         </Text>
 
         <Text style={styles.titulo}>
-          Não foi possível concluir
+          {outroNavegador
+            ? "Quase lá!"
+            : "Não foi possível concluir"}
         </Text>
 
         <Text style={styles.mensagem}>
-          {erro}
+          {outroNavegador
+            ? "Se este link era a confirmação do seu cadastro, seu e-mail já foi confirmado. Volte para o login e entre com seu e-mail e senha."
+            : erro}
         </Text>
 
         <Pressable
