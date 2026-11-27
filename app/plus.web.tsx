@@ -98,7 +98,7 @@ export default function PlusWebScreen() {
               <Text style={styles.usageValue}>
                 {materialsUsed === null
                   ? `limite de ${usage?.materials?.limit ?? 0}`
-                  : `${materialsUsed} usadas · ${Math.max((usage?.materials?.limit ?? 0) - materialsUsed, 0)} restantes de ${usage?.materials?.limit ?? 0}`}
+                  : `${materialsUsed} usadas · ${Math.max((usage?.materials?.limit ?? 0) - materialsUsed, 0)} restantes`}
               </Text>
             </View>
           </>
