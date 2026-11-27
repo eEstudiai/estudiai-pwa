@@ -25,6 +25,16 @@ const CHAVE_SENHA = "estudiai_login_senha";
 const CHAVE_LEMBRAR = "estudiai_login_lembrar";
 const REDIRECT_URL = "estudiai://auth/callback";
 
+// No navegador (react-native-web) Alert.alert nao exibe nada; usa window.alert.
+function avisar(titulo: string, mensagem?: string) {
+  if (Platform.OS === "web" && typeof window !== "undefined") {
+    window.alert(mensagem ? `${titulo}\n\n${mensagem}` : titulo);
+    return;
+  }
+
+  Alert.alert(titulo, mensagem);
+}
+
 export default function Login() {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
@@ -125,7 +135,7 @@ export default function Login() {
 
   async function entrar() {
     if (!email || !senha) {
-      Alert.alert(
+      avisar(
         "Atenção",
         "Informe seu e-mail e sua senha."
       );
@@ -143,7 +153,7 @@ export default function Login() {
         });
 
       if (error) {
-        Alert.alert(
+        avisar(
           "Erro ao entrar",
           error.message
         );
@@ -171,7 +181,7 @@ export default function Login() {
         error
       );
 
-      Alert.alert(
+      avisar(
         "Erro ao entrar",
         "Não foi possível entrar. Verifique sua conexão e tente novamente."
       );
@@ -182,7 +192,7 @@ export default function Login() {
 
   async function criarConta() {
     if (!email || !senha) {
-      Alert.alert(
+      avisar(
         "Preencha seus dados",
         "Informe um e-mail e crie uma senha com pelo menos 6 caracteres para criar sua conta."
       );
@@ -191,7 +201,7 @@ export default function Login() {
     }
 
     if (senha.length < 6) {
-      Alert.alert(
+      avisar(
         "Senha inválida",
         "A senha precisa ter pelo menos 6 caracteres."
       );
@@ -208,12 +218,14 @@ export default function Login() {
           password: senha,
           options: {
             emailRedirectTo:
-              "estudiai://auth/callback",
+              Platform.OS === "web" && typeof window !== "undefined"
+                ? `${window.location.origin}/estudiai-pwa/auth/callback`
+                : "estudiai://auth/callback",
           },
         });
 
       if (error) {
-        Alert.alert(
+        avisar(
           "Erro ao criar conta",
           error.message
         );
@@ -221,7 +233,7 @@ export default function Login() {
         return;
       }
 
-      Alert.alert(
+      avisar(
         "Conta criada!",
         "Enviamos um e-mail de confirmação. Abra o e-mail e toque no link para confirmar sua conta."
       );
@@ -231,7 +243,7 @@ export default function Login() {
         error
       );
 
-      Alert.alert(
+      avisar(
         "Erro ao criar conta",
         "Não foi possível criar a conta. Verifique sua conexão e tente novamente."
       );
@@ -273,7 +285,7 @@ export default function Login() {
         resultado.type === "cancel" ||
         resultado.type === "dismiss"
       ) {
-        Alert.alert(
+        avisar(
           "Login cancelado",
           "Você pode tentar novamente ou entrar com e-mail e senha."
         );
@@ -297,7 +309,7 @@ export default function Login() {
 
       if (erroOAuth) {
         if (params.get("error") === "access_denied") {
-          Alert.alert(
+          avisar(
             "Login cancelado",
             "A autenticação com Google foi cancelada."
           );
@@ -370,7 +382,7 @@ export default function Login() {
           mensagem
         );
 
-      Alert.alert(
+      avisar(
         "Não foi possível entrar com Google",
         falhaConexao
           ? "Verifique sua conexão com a internet e tente novamente."
