@@ -134,7 +134,7 @@ export default function MercadoPagoPlusCard({
       const params = new URLSearchParams(window.location.search);
       if (params.get("mp") === "return") {
         setReturnedFromMercadoPago(true);
-        setNotice("Confirmando seu pagamento…");
+        setNotice("");
       }
     }
   }, [loadOffer]);
@@ -158,7 +158,7 @@ export default function MercadoPagoPlusCard({
     const stopAt = Date.now() + 3 * 60 * 1000;
 
     setConfirmingPayment(true);
-    setNotice("Confirmando seu pagamento…");
+    setNotice("");
 
     const poll = async () => {
       const attempt = await syncMercadoPago();
@@ -169,7 +169,7 @@ export default function MercadoPagoPlusCard({
         await loadOffer(false);
         if (active) {
           setConfirmingPayment(false);
-          setNotice("Pagamento confirmado.");
+          setNotice("");
         }
         return;
       }
@@ -182,7 +182,7 @@ export default function MercadoPagoPlusCard({
           await onPlanUpdatedRef.current();
           if (active) {
             setConfirmingPayment(false);
-            setNotice("Pagamento confirmado.");
+            setNotice("");
           }
           return;
         }
@@ -274,7 +274,7 @@ export default function MercadoPagoPlusCard({
       const refreshedOffer = await loadOffer(false);
       await onPlanUpdated();
       if (refreshedOffer?.plan === "plus") {
-        setNotice("Pagamento confirmado.");
+        setNotice("");
       }
     } finally {
       setWorking(false);
