@@ -38,14 +38,17 @@ export default function PlusWebScreen() {
         throw rpcError ?? new Error("Não foi possível consultar seu plano.");
       }
       setUsage(data as UsageStatus);
-      const { count, error: materialsError } = await supabase
-        .from("materials")
-        .select("id", { count: "exact", head: true });
-      if (materialsError) {
-        console.warn("Could not count study materials:", materialsError.message);
+      const { data: materialUsage, error: materialsError } = await supabase.rpc(
+        "get_my_material_usage",
+      );
+      if (materialsError || !materialUsage?.success) {
+        console.warn(
+          "Could not load study materials usage:",
+          materialsError?.message ?? materialUsage?.reason,
+        );
         setMaterialsUsed(null);
       } else {
-        setMaterialsUsed(count ?? 0);
+        setMaterialsUsed(materialUsage.used ?? 0);
       }
     } catch (cause) {
       console.error("Could not load EstudaIA Plus status:", cause);
