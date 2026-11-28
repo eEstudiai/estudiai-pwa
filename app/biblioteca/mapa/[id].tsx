@@ -107,7 +107,7 @@ export default function MapaMentalScreen() {
   const [expandidos, setExpandidos] =
     useState<Set<string>>(new Set());
 
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<any>(null);
   const areaMapaY = useRef(0);
   const posicaoRamos = useRef<Record<string, number>>({});
 
@@ -116,6 +116,9 @@ export default function MapaMentalScreen() {
 
   const [abrindoPdf, setAbrindoPdf] =
     useState(false);
+
+  const [pontosAbertos, setPontosAbertos] =
+    useState<Set<string>>(new Set());
 
   const normalizarNo = (
     valor: unknown,
@@ -1097,23 +1100,16 @@ export default function MapaMentalScreen() {
           </Text>
         </Pressable>
         {topicoEstudo === no.id ? (() => {
-          const pontos = coletarDescendentes(no).slice(0, 8);
+          const todosPontos = coletarDescendentes(no).slice(0, 12);
+          const verTodos = pontosAbertos.has(no.id);
+          const pontos = verTodos ? todosPontos : todosPontos.slice(0, 4);
+          const restantes = todosPontos.length - 4;
           const pagina = menorPagina(no);
 
           return (
             <View style={styles.painelEstudo}>
               <Text style={styles.painelEstudoTitulo}>Estudando: {no.title}</Text>
               {no.summary ? <Text style={styles.painelTexto}>{no.summary}</Text> : null}
-              {pontos.length > 0 ? (
-                <View style={styles.painelPontos}>
-                  <Text style={styles.painelSubtitulo}>Pontos principais</Text>
-                  {pontos.map((ponto, pontoIndex) => (
-                    <Text key={`ponto-${no.id}-${pontoIndex}`} style={styles.painelPonto}>
-                      • {ponto.title}{ponto.summary ? ` — ${ponto.summary.length > 140 ? `${ponto.summary.slice(0, 140)}…` : ponto.summary}` : ""}
-                    </Text>
-                  ))}
-                </View>
-              ) : null}
               <Pressable
                 accessibilityRole="button"
                 style={styles.painelBotao}
@@ -1138,6 +1134,44 @@ export default function MapaMentalScreen() {
               >
                 <Text style={styles.painelBotaoSecTexto}>📝 Fazer um simulado da apostila</Text>
               </Pressable>
+              {pontos.length > 0 ? (
+                <View style={styles.painelPontos}>
+                  <Text style={styles.painelSubtitulo}>Pontos principais</Text>
+                  {pontos.map((ponto, pontoIndex) => (
+                    <View key={`ponto-${no.id}-${pontoIndex}`} style={styles.painelPontoItem}>
+                      <Text style={styles.painelPontoTitulo}>{ponto.title}</Text>
+                      {ponto.summary ? (
+                        <Text style={styles.painelPonto}>
+                          {ponto.summary.length > 160 ? `${ponto.summary.slice(0, 160)}…` : ponto.summary}
+                        </Text>
+                      ) : null}
+                    </View>
+                  ))}
+                  {restantes > 0 ? (
+                    <Pressable
+                      accessibilityRole="button"
+                      style={styles.painelVerMais}
+                      onPress={() =>
+                        setPontosAbertos((anteriores) => {
+                          const novos = new Set(anteriores);
+
+                          if (novos.has(no.id)) {
+                            novos.delete(no.id);
+                          } else {
+                            novos.add(no.id);
+                          }
+
+                          return novos;
+                        })
+                      }
+                    >
+                      <Text style={styles.painelVerMaisTexto}>
+                        {verTodos ? "Ver menos pontos" : `Ver mais pontos (${restantes})`}
+                      </Text>
+                    </Pressable>
+                  ) : null}
+                </View>
+              ) : null}
             </View>
           );
         })() : null}
@@ -1772,9 +1806,13 @@ const styles =
     painelEstudo: { width: "92%", alignSelf: "center", marginTop: 8, backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#BFDBFE", borderRadius: 16, padding: 14 },
     painelEstudoTitulo: { fontSize: 15, fontWeight: "900", color: "#1E3A8A", marginBottom: 6 },
     painelTexto: { fontSize: 13, lineHeight: 19, color: "#374151" },
-    painelPontos: { marginTop: 10 },
+    painelPontos: { marginTop: 14 },
     painelSubtitulo: { fontSize: 12, fontWeight: "800", color: "#1D4ED8", marginBottom: 4 },
-    painelPonto: { fontSize: 12, lineHeight: 18, color: "#374151", marginBottom: 3 },
+    painelPontoItem: { marginBottom: 8 },
+    painelPontoTitulo: { fontSize: 13, fontWeight: "800", color: "#1E3A8A" },
+    painelPonto: { fontSize: 12, lineHeight: 18, color: "#374151", marginTop: 1 },
+    painelVerMais: { marginTop: 4, paddingVertical: 8, alignItems: "center" },
+    painelVerMaisTexto: { fontSize: 13, fontWeight: "800", color: "#1D4ED8" },
     painelBotao: { marginTop: 12, backgroundColor: "#1D4ED8", borderRadius: 12, paddingVertical: 11, alignItems: "center" },
     painelBotaoTexto: { fontSize: 13, fontWeight: "800", color: "#FFFFFF" },
     painelBotaoSec: { marginTop: 8, backgroundColor: "#EFF6FF", borderRadius: 12, paddingVertical: 11, alignItems: "center" },
