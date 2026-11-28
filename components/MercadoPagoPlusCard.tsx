@@ -306,7 +306,7 @@ export default function MercadoPagoPlusCard({
                   setCardFormError(
                     status === 409
                       ? "Já existe um pagamento em confirmação. Toque em Atualizar status."
-                      : "Não foi possível concluir a assinatura com este cartão. Confira os dados ou tente outro cartão.",
+                      : "O cartão não foi aceito. Confira os dados e tente outro cartão de crédito. Se continuar, toque em Voltar e use Continuar checkout.",
                   );
                   throw new Error("card_checkout_failed");
                 }
