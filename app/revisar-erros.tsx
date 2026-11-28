@@ -10,7 +10,11 @@ import {
 import { useFocusEffect } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { carregarErrosAtuais, ErroSimulado } from "../services/erros";
+import {
+  carregarErrosAtuais,
+  ErroSimulado,
+  registrarRevisao,
+} from "../services/erros";
 import { voltar } from "../services/navegacao";
 
 export default function RevisarErros() {
@@ -58,9 +62,13 @@ export default function RevisarErros() {
 
     setEscolha(letra);
 
-    if (letra === atual.correta) {
+    const acertou = letra === atual.correta;
+
+    if (acertou) {
       setAcertos((valor) => valor + 1);
     }
+
+    void registrarRevisao(atual.questaoId, acertou);
   };
 
   const proxima = () => {
@@ -188,8 +196,8 @@ export default function RevisarErros() {
             </View>
 
             <Text style={s.aviso}>
-              Esta revisão é para praticar. O resultado não altera seu
-              desempenho nos simulados.
+              As questões que você acertar saem da lista de erros. Seu
+              desempenho nos simulados não muda.
             </Text>
           </View>
         ) : null}

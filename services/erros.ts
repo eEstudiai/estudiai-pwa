@@ -71,8 +71,33 @@ function primeiro<T>(valor: T | T[] | null): T | null {
 }
 
 /*
-  Questoes de simulado cuja resposta MAIS RECENTE foi errada.
-  Lanca erro se a consulta falhar.
+  Registra o resultado de uma questao refeita na revisao de erros.
+  Falhas apenas vao para o log: nao devem atrapalhar a revisao.
+*/
+export async function registrarRevisao(questaoId: string, acertou: boolean) {
+  try {
+    const { error } = await supabase
+      .from("question_review_results")
+      .insert({ question_id: questaoId, is_correct: acertou });
+
+    if (error) {
+      console.log("ERRO AO REGISTRAR REVISAO:", error);
+    }
+  } catch (error) {
+    console.log("ERRO INESPERADO AO REGISTRAR REVISAO:", error);
+  }
+}
+
+type RevisaoLinha = {
+  question_id: string;
+  is_correct: boolean;
+  created_at: string;
+};
+
+/*
+  Questoes de simulado cujo resultado MAIS RECENTE foi errado, considerando
+  tanto as respostas dos simulados quanto as da revisao de erros.
+  Lanca erro se a consulta dos simulados falhar.
 */
 export async function carregarErrosAtuais(): Promise<ErroSimulado[]> {
   const { data, error } = await supabase
@@ -91,17 +116,45 @@ export async function carregarErrosAtuais(): Promise<ErroSimulado[]> {
     throw error;
   }
 
+  const respostas = (data as unknown as RespostaLinha[]) ?? [];
+
+  // Se a tabela de revisao ainda nao existir, segue so com os simulados.
+  const revisoes = await supabase
+    .from("question_review_results")
+    .select("question_id, is_correct, created_at")
+    .order("created_at", { ascending: false })
+    .limit(LIMITE_RESPOSTAS);
+
+  const ultimaRevisao = new Map<string, RevisaoLinha>();
+
+  if (!revisoes.error) {
+    for (const revisao of (revisoes.data as RevisaoLinha[]) ?? []) {
+      if (!ultimaRevisao.has(revisao.question_id)) {
+        ultimaRevisao.set(revisao.question_id, revisao);
+      }
+    }
+  } else {
+    console.log("REVISOES INDISPONIVEIS:", revisoes.error);
+  }
+
   const vistas = new Set<string>();
   const erros: ErroSimulado[] = [];
 
-  for (const resposta of (data as unknown as RespostaLinha[]) ?? []) {
+  for (const resposta of respostas) {
     if (vistas.has(resposta.question_id)) {
       continue;
     }
 
     vistas.add(resposta.question_id);
 
-    if (resposta.is_correct) {
+    const revisao = ultimaRevisao.get(resposta.question_id);
+
+    const acertouAgora =
+      revisao && new Date(revisao.created_at) > new Date(resposta.created_at)
+        ? revisao.is_correct
+        : resposta.is_correct;
+
+    if (acertouAgora) {
       continue;
     }
 
