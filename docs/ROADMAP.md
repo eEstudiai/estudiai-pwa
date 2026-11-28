@@ -48,6 +48,10 @@ Fase 4 - Mapa Mental
 
 Fase 5 - Fonte e confianca
 - [ ] Fonte da resposta (apostila, pagina/trecho; futuramente abrir o trecho)
+- [ ] Questao digitada: alem de fotografar, permitir que o usuario ESCREVA uma
+      pergunta (na tela de Questao) e a IA responda com base nas apostilas dele.
+      Observacoes: reaproveitar answer-question e o historico; contar no mesmo
+      limite de questoes do plano; avaliar escolher qual apostila usar (ou todas).
 
 Fase 6 - Novos recursos
 - [ ] Flashcards inteligentes com repeticao espacada (Nao sei / Dificil /
