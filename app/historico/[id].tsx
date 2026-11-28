@@ -10,7 +10,8 @@ import {
   Platform,
 } from "react-native";
 import { voltar } from "../../services/navegacao";
-import { abrirApostilaNaPagina } from "../../services/pdf";
+import ImagemAjustada from "../../components/ImagemAjustada";
+import { abrirApostilaNaPagina, nomeAmigavelApostila } from "../../services/pdf";
 
 import {
   router,
@@ -601,13 +602,7 @@ export default function HistoricoDetalhe() {
 
       {imageUrl ? (
         <View style={s.cardImagem}>
-          <Image
-            source={{
-              uri: imageUrl,
-            }}
-            style={s.imagem}
-            resizeMode="contain"
-          />
+          <ImagemAjustada uri={imageUrl} alturaMaxima={520} />
         </View>
       ) : null}
 
@@ -733,7 +728,7 @@ export default function HistoricoDetalhe() {
               <Text
                 style={s.fonte}
               >
-                {fonteTitulo ||
+                {nomeAmigavelApostila(fonteTitulo) ||
                   (resposta.confirmed_by_material
                     ? "Material de estudo"
                     : "Modo de desenvolvimento")}

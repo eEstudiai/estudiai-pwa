@@ -44,3 +44,13 @@ export async function abrirApostilaNaPagina(
     avisar("Não foi possível abrir o PDF", "Tente novamente em instantes.");
   }
 }
+
+/* "Apostila_Capitalizacao_2026.pdf" -> "Apostila Capitalizacao 2026" */
+export function nomeAmigavelApostila(nome?: string | null) {
+  if (!nome) return "";
+  return nome
+    .replace(/\.pdf$/i, "")
+    .replace(/[_]+/g, " ")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}

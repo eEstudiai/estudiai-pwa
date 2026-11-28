@@ -25,6 +25,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { supabase } from "../services/supabase";
 import ConnectionStatus from "../components/ConnectionStatus";
 import DesempenhoSimulados from "../components/DesempenhoSimulados";
+import ImagemAjustada from "../components/ImagemAjustada";
 
 type Resposta = {
   answer: string;
@@ -618,13 +619,7 @@ export default function Historico() {
               </View>
 
               {item.image_url ? (
-                <Image
-                  source={{
-                    uri: item.image_url,
-                  }}
-                  style={s.imagem}
-                  resizeMode="contain"
-                />
+                <ImagemAjustada uri={item.image_url} alturaMaxima={260} />
               ) : (
                 <View
                   style={

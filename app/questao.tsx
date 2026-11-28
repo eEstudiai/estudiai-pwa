@@ -15,6 +15,7 @@ import {
 
 import {
   useCallback,
+  useEffect,
   useRef,
   useState,
 } from "react";
@@ -31,7 +32,9 @@ import * as FileSystem from "expo-file-system/legacy";
 
 import { supabase } from "../services/supabase";
 import ConnectionStatus from "../components/ConnectionStatus";
-import { abrirApostilaNaPagina } from "../services/pdf";
+import ImagemAjustada from "../components/ImagemAjustada";
+import { avisar } from "../services/avisos";
+import { abrirApostilaNaPagina, nomeAmigavelApostila } from "../services/pdf";
 
 type ResultadoQuestao = {
   alternativa: string | null;
@@ -308,6 +311,12 @@ export default function QuestaoScreen() {
   const [abrindoPdf, setAbrindoPdf] =
     useState(false);
 
+  const [explicacaoAberta, setExplicacaoAberta] =
+    useState(false);
+
+  const [etapaAnalise, setEtapaAnalise] =
+    useState(0);
+
   const [questionAiEnabled, setQuestionAiEnabled] =
     useState(false);
 
@@ -468,7 +477,48 @@ export default function QuestaoScreen() {
     );
   };
 
+  const abrirCameraNativaWeb = () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+    input.setAttribute("capture", "environment");
+    input.style.display = "none";
+    input.onchange = () => {
+      const arquivo = input.files?.[0];
+      document.body.removeChild(input);
+      if (!arquivo) return;
+      const leitor = new FileReader();
+      leitor.onload = () => {
+        setResultado(null);
+        setFotoRevisaoUri(String(leitor.result));
+        setFotoRevisaoMimeType(arquivo.type || "image/jpeg");
+        setCameraAberta(false);
+        setRecorteAberto(false);
+      };
+      leitor.onerror = () =>
+        avisar("Erro", "Não foi possível ler a fotografia.");
+      leitor.readAsDataURL(arquivo);
+    };
+    document.body.appendChild(input);
+    input.click();
+  };
+
   const tirarFoto = async () => {
+    /*
+      No celular (navegador/PWA) usamos a camera nativa do aparelho:
+      foco automatico, zoom, flash e foto em alta resolucao.
+      Precisa rodar direto no toque, antes de qualquer await.
+    */
+    if (
+      Platform.OS === "web" &&
+      typeof navigator !== "undefined" &&
+      (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ||
+        (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1))
+    ) {
+      abrirCameraNativaWeb();
+      return;
+    }
+
     try {
       setResultado(null);
       let p=permissaoCamera;
@@ -841,6 +891,24 @@ export default function QuestaoScreen() {
       }
     };
 
+  useEffect(() => {
+    setExplicacaoAberta(false);
+  }, [resultado]);
+
+  useEffect(() => {
+    if (!carregando) {
+      setEtapaAnalise(0);
+      return;
+    }
+    setEtapaAnalise(0);
+    const t1 = setTimeout(() => setEtapaAnalise(1), 3500);
+    const t2 = setTimeout(() => setEtapaAnalise(2), 9000);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, [carregando]);
+
   const novaQuestao = () => {
     setImagemUri(null);
     setImagemMimeType("image/jpeg");
@@ -1164,13 +1232,7 @@ export default function QuestaoScreen() {
               </Text>
             </View>
 
-            <Image
-              source={{
-                uri: imagemUri,
-              }}
-              style={s.imagem}
-              resizeMode="contain"
-            />
+            <ImagemAjustada uri={imagemUri} />
           </View>
 
           {!resultado &&
@@ -1256,17 +1318,26 @@ export default function QuestaoScreen() {
             Analisando questão...
           </Text>
 
-          <Text
-            style={
-              s.carregandoTexto
-            }
-          >
-            Aguarde enquanto o
-            EstudaIA interpreta a
-            imagem, consulta seus
-            materiais e prepara a
-            resposta.
-          </Text>
+          <View style={{ gap: 8, marginTop: 6, alignSelf: "stretch", paddingHorizontal: 12 }}>
+            {[
+              "Lendo a imagem da questão",
+              "Buscando nas suas apostilas",
+              "Preparando a resposta",
+            ].map((texto, i) => (
+              <Text
+                key={texto}
+                style={[
+                  s.carregandoTexto,
+                  { textAlign: "left" },
+                  i === etapaAnalise && { fontWeight: "800", color: "#0B1F4B" },
+                  i > etapaAnalise && { opacity: 0.45 },
+                ]}
+              >
+                {i < etapaAnalise ? "✓ " : i === etapaAnalise ? "● " : "○ "}
+                {texto}
+              </Text>
+            ))}
+          </View>
         </View>
       ) : null}
 
@@ -1362,26 +1433,39 @@ export default function QuestaoScreen() {
               style={
                 s.respostaTexto
               }
+              numberOfLines={
+                explicacaoAberta ? undefined : 4
+              }
             >
               {respostaLimpa}
             </Text>
-          </View>
 
-          {mostrarExplicacao ? (
-            <View style={s.card}>
-              <Text style={s.label}>
-                EXPLICAÇÃO
-              </Text>
+            {mostrarExplicacao && explicacaoAberta ? (
+              <>
+                <Text style={[s.label, { marginTop: 16 }]}>
+                  EXPLICAÇÃO
+                </Text>
 
-              <Text
-                style={
-                  s.textoNormal
-                }
+                <Text style={s.textoNormal}>
+                  {explicacaoLimpa}
+                </Text>
+              </>
+            ) : null}
+
+            {respostaLimpa.length > 200 || mostrarExplicacao ? (
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => setExplicacaoAberta((v) => !v)}
+                style={{ marginTop: 12 }}
               >
-                {explicacaoLimpa}
-              </Text>
-            </View>
-          ) : null}
+                <Text style={{ color: "#1D4ED8", fontWeight: "800", fontSize: 14 }}>
+                  {explicacaoAberta
+                    ? "Ver menos ▲"
+                    : "Ver explicação completa ▼"}
+                </Text>
+              </Pressable>
+            ) : null}
+          </View>
 
           <View
             style={
@@ -1420,7 +1504,7 @@ export default function QuestaoScreen() {
                 style={s.fonte}
                 numberOfLines={2}
               >
-                {resultado.fonte ||
+                {nomeAmigavelApostila(resultado.fonte) ||
                   "Não confirmada"}
               </Text>
             </View>

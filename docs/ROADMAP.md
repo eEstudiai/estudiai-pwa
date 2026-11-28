@@ -47,6 +47,9 @@ Fase 4 - Mapa Mental
 - [x] (1a versao: pontos do topico, abrir PDF na pagina, atalhos para resumo e simulado; falta gerar questoes/explicacao so do topico com IA) "Estudar este topico" (resumo, explicacao ou questoes do assunto)
 
 Fase 5 - Fonte e confianca
+- [x] Camera no celular (web/iOS): usa a camera nativa do aparelho (foco, zoom, flash, alta resolucao); desktop segue com camera do navegador. Android app ja usa camera nativa
+- [x] Resultado da questao: explicacao recolhida ("Ver explicacao completa"), etapas durante a analise, imagem sem faixa cinza, nome da apostila legivel
+- [ ] Miniatura da foto no resultado (toque abre em tela cheia)
 - [x] Fonte da resposta (apostila, pagina e botao "Abrir PDF na pagina N" em questao e historico; trecho exato fica para depois)
 - [ ] Questao digitada: alem de fotografar, permitir que o usuario ESCREVA uma
       pergunta (na tela de Questao) e a IA responda com base nas apostilas dele.
