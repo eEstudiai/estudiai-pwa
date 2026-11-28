@@ -39,7 +39,7 @@ Fase 3 - Simulado
 - [ ] Simulado 2.0 (parcial):
       [x] dificuldade (misto/facil/media/dificil) e foco nos meus erros
           (generate-quiz usa difficulty e focusErrors; PRECISA DE DEPLOY)
-      [ ] cronometro opcional ao responder
+      [x] cronometro ao responder (pode esconder) e tempo total/media no resultado (so tela; tempo nao e salvo no banco)
       [ ] escolher assuntos da apostila
 - [x] (servidor: generate-quiz passa as ultimas 80 perguntas da apostila e pede questoes novas; PRECISA DE DEPLOY) Simulados sem repeticao excessiva (evitar perguntas ja usadas; ampliar
       cobertura dos assuntos da apostila)

@@ -1,5 +1,6 @@
 import React, {
   useCallback,
+  useEffect,
   useState,
 } from "react";
 import { voltar } from "../../../../services/navegacao";
@@ -129,6 +130,45 @@ export default function ResponderSimuladoScreen() {
     useState<string | null>(
       null
     );
+
+  /*
+    Cronometro: conta o tempo enquanto o aluno responde e para ao concluir.
+    O aluno pode esconder o relogio; o tempo continua contando.
+  */
+  const [segundos, setSegundos] =
+    useState(0);
+
+  const [mostrarTempo, setMostrarTempo] =
+    useState(true);
+
+  const cronometroAtivo =
+    !carregando &&
+    !concluido &&
+    questoes.length > 0;
+
+  useEffect(() => {
+    if (!cronometroAtivo) {
+      return;
+    }
+
+    const intervalo = setInterval(
+      () => setSegundos((s) => s + 1),
+      1000
+    );
+
+    return () => clearInterval(intervalo);
+  }, [cronometroAtivo]);
+
+  const formatarTempo = (total: number) => {
+    const h = Math.floor(total / 3600);
+    const m = Math.floor((total % 3600) / 60);
+    const s = total % 60;
+    const dois = (n: number) => String(n).padStart(2, "0");
+
+    return h > 0
+      ? `${h}:${dois(m)}:${dois(s)}`
+      : `${dois(m)}:${dois(s)}`;
+  };
 
   const carregarSimulado =
     useCallback(async () => {
@@ -723,6 +763,20 @@ export default function ResponderSimuladoScreen() {
             {questoes.length}{" "}
             questões corretas
           </Text>
+
+          <Text
+            style={[
+              styles.resultadoAcertos,
+              { marginTop: 8 },
+            ]}
+          >
+            ⏱ Tempo: {formatarTempo(segundos)}
+            {questoes.length > 0
+              ? ` • média de ${formatarTempo(
+                  Math.round(segundos / questoes.length)
+                )} por questão`
+              : ""}
+          </Text>
         </View>
 
         <View
@@ -891,15 +945,40 @@ export default function ResponderSimuladoScreen() {
           "Simulado"}
       </Text>
 
-      <Text
-        style={
-          styles.progressoTexto
-        }
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
       >
-        Questão{" "}
-        {indiceAtual + 1} de{" "}
-        {questoes.length}
-      </Text>
+        <Text
+          style={
+            styles.progressoTexto
+          }
+        >
+          Questão{" "}
+          {indiceAtual + 1} de{" "}
+          {questoes.length}
+        </Text>
+
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => setMostrarTempo((v) => !v)}
+        >
+          <Text
+            style={{
+              fontSize: 14,
+              fontWeight: "800",
+              color: "#1D4ED8",
+            }}
+          >
+            {mostrarTempo
+              ? `⏱ ${formatarTempo(segundos)}`
+              : "⏱ Mostrar tempo"}
+          </Text>
+        </Pressable>
+      </View>
 
       <View
         style={
