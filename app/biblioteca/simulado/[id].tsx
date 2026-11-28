@@ -38,6 +38,15 @@ type QuantidadeQuestoes =
   | 20
   | 30;
 
+type Dificuldade = "misto" | "facil" | "media" | "dificil";
+
+const OPCOES_DIFICULDADE: { valor: Dificuldade; rotulo: string }[] = [
+  { valor: "misto", rotulo: "Misto" },
+  { valor: "facil", rotulo: "Fácil" },
+  { valor: "media", rotulo: "Média" },
+  { valor: "dificil", rotulo: "Difícil" },
+];
+
 type SimuladoSalvo = {
   id: string;
   title: string | null;
@@ -72,6 +81,12 @@ export default function SimuladoMaterialScreen() {
     useState<QuantidadeQuestoes>(
       10
     );
+
+  const [dificuldade, setDificuldade] =
+    useState<Dificuldade>("misto");
+
+  const [focoErros, setFocoErros] =
+    useState(false);
 
   const [
     carregando,
@@ -324,6 +339,12 @@ export default function SimuladoMaterialScreen() {
 
                 questionCount:
                   quantidade,
+
+                difficulty:
+                  dificuldade,
+
+                focusErrors:
+                  focoErros,
               },
             }
           );
@@ -380,7 +401,12 @@ export default function SimuladoMaterialScreen() {
               data.quiz
                 .question_count ??
               quantidade
-            } questões foi criado e salvo com sucesso.`
+            } questões foi criado e salvo com sucesso.${
+              data.focusRequested &&
+              !data.focusApplied
+                ? " Você ainda não tem erros nesta apostila, então o simulado foi geral."
+                : ""
+            }`
           );
 
           return;
@@ -660,6 +686,53 @@ export default function SimuladoMaterialScreen() {
           );
         })}
       </View>
+
+      <Text style={styles.secaoTitulo}>
+        Nível de dificuldade
+      </Text>
+
+      <View style={styles.dificuldades}>
+        {OPCOES_DIFICULDADE.map((opcao) => {
+          const ativo = dificuldade === opcao.valor;
+
+          return (
+            <Pressable
+              key={opcao.valor}
+              style={[
+                styles.dificuldadeBotao,
+                ativo && styles.dificuldadeBotaoAtivo,
+              ]}
+              onPress={() => setDificuldade(opcao.valor)}
+            >
+              <Text
+                style={[
+                  styles.dificuldadeTexto,
+                  ativo && styles.dificuldadeTextoAtivo,
+                ]}
+              >
+                {opcao.rotulo}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+
+      <Pressable
+        style={[
+          styles.focoCard,
+          focoErros && styles.focoCardAtivo,
+        ]}
+        onPress={() => setFocoErros((v) => !v)}
+      >
+        <Text style={styles.focoTitulo}>
+          {focoErros ? "✅" : "⬜"} 🎯 Focar nos meus erros
+        </Text>
+
+        <Text style={styles.focoDescricao}>
+          Cria questões novas sobre os assuntos em que você mais errou nesta
+          apostila. Sem erros registrados, o simulado sai geral.
+        </Text>
+      </Pressable>
 
       <View
         style={
@@ -1178,6 +1251,64 @@ const styles =
     secaoDescricao: {
       marginTop: 4,
       marginBottom: 13,
+      fontSize: 13,
+      lineHeight: 19,
+      color: "#64748B",
+    },
+
+    dificuldades: {
+      flexDirection: "row",
+      gap: 8,
+      marginBottom: 14,
+    },
+
+    dificuldadeBotao: {
+      flex: 1,
+      paddingVertical: 12,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: "#D6DEEB",
+      backgroundColor: "#FFFFFF",
+      alignItems: "center",
+    },
+
+    dificuldadeBotaoAtivo: {
+      backgroundColor: "#0B1F4B",
+      borderColor: "#0B1F4B",
+    },
+
+    dificuldadeTexto: {
+      fontSize: 14,
+      fontWeight: "800",
+      color: "#334155",
+    },
+
+    dificuldadeTextoAtivo: {
+      color: "#FFFFFF",
+    },
+
+    focoCard: {
+      backgroundColor: "#FFFFFF",
+      borderRadius: 14,
+      borderWidth: 1,
+      borderColor: "#D6DEEB",
+      padding: 14,
+      marginBottom: 14,
+    },
+
+    focoCardAtivo: {
+      borderColor: "#1D4ED8",
+      backgroundColor: "#EFF6FF",
+    },
+
+    focoTitulo: {
+      fontSize: 15,
+      fontWeight: "800",
+      color: "#0B1F4B",
+    },
+
+    focoDescricao: {
+      marginTop: 4,
       fontSize: 13,
       lineHeight: 19,
       color: "#64748B",
