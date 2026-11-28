@@ -359,7 +359,7 @@ export default function ResumoMaterialScreen() {
             avisar(
               "Limite de resumos atingido",
               respostaErro?.error ||
-                "Você atingiu o limite de resumos disponível no seu plano."
+                "Você atingiu o limite de resumos disponível no seu plano atual. O EstudaIA Plus amplia esses limites."
             );
 
             return;

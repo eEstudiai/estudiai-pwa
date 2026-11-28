@@ -523,10 +523,6 @@ export default function ResponderSimuladoScreen() {
           true
         );
 
-        avisar(
-          "Resultado salvo",
-          "Sua tentativa foi registrada com sucesso."
-        );
       } catch (error) {
         console.log(
           "ERRO INESPERADO AO SALVAR RESULTADO:",

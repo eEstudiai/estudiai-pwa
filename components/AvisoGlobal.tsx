@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Platform, Pressable, StyleSheet, Text } from "react-native";
+import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { AvisoTela, inscreverAviso } from "../services/avisos";
 
@@ -25,27 +25,34 @@ export default function AvisoGlobal() {
   }
 
   return (
-    <Pressable
-      accessibilityRole="alert"
-      onPress={() => setAviso(null)}
-      style={s.caixa}
-    >
-      <Text style={s.titulo}>{aviso.titulo}</Text>
-      {aviso.mensagem ? <Text style={s.mensagem}>{aviso.mensagem}</Text> : null}
-      <Text style={s.fechar}>Toque para fechar</Text>
-    </Pressable>
+    <View pointerEvents="box-none" style={s.camada}>
+      <Pressable
+        accessibilityRole="alert"
+        onPress={() => setAviso(null)}
+        style={s.caixa}
+      >
+        <Text style={s.titulo}>{aviso.titulo}</Text>
+        {aviso.mensagem ? (
+          <Text style={s.mensagem}>{aviso.mensagem}</Text>
+        ) : null}
+        <Text style={s.fechar}>Toque para fechar</Text>
+      </Pressable>
+    </View>
   );
 }
 
 const s = StyleSheet.create({
-  caixa: {
+  camada: {
     position: "absolute",
-    top: 12,
-    left: 12,
-    right: 12,
+    top: 72,
+    left: 0,
+    right: 0,
     zIndex: 9999,
+    alignItems: "center",
+  },
+  caixa: {
+    width: "92%",
     maxWidth: 640,
-    alignSelf: "center",
     backgroundColor: "#0B1F4B",
     borderRadius: 14,
     paddingVertical: 14,

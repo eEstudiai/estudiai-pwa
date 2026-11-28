@@ -333,7 +333,7 @@ export default function SimuladoMaterialScreen() {
           if (status === 429) {
             avisar(
               "Limite de simulados atingido",
-              "Você já utilizou todos os simulados disponíveis no seu plano. Consulte o EstudaIA Plus para ampliar seus limites."
+              "Você atingiu o limite de simulados disponível no seu plano atual. O EstudaIA Plus amplia esses limites."
             );
 
             return;
