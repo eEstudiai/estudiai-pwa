@@ -3,6 +3,7 @@ import React, {
   useMemo,
   useState,
 } from "react";
+import { voltar } from "../../../services/navegacao";
 
 import {
   View,
@@ -1076,7 +1077,7 @@ export default function MapaMentalScreen() {
             styles.botaoVoltar
           }
           onPress={() =>
-            router.back()
+            voltar("/biblioteca")
           }
         >
           <Text
@@ -1113,7 +1114,7 @@ export default function MapaMentalScreen() {
           styles.voltarTopo
         }
         onPress={() =>
-          router.back()
+          voltar("/biblioteca")
         }
       >
         <Text

@@ -9,6 +9,7 @@ import {
   Alert,
   Platform,
 } from "react-native";
+import { voltar } from "../../services/navegacao";
 
 import {
   router,
@@ -507,7 +508,7 @@ export default function HistoricoDetalhe() {
         <Pressable
           style={s.botaoVoltarErro}
           onPress={() =>
-            router.back()
+            voltar("/historico")
           }
         >
           <Text
@@ -574,7 +575,7 @@ export default function HistoricoDetalhe() {
       <Pressable
         style={s.voltar}
         onPress={() =>
-          router.back()
+          voltar("/historico")
         }
       >
         <Text

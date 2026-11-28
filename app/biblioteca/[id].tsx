@@ -2,6 +2,7 @@ import React, {
   useCallback,
   useState,
 } from "react";
+import { voltar } from "../../services/navegacao";
 
 import {
   View,
@@ -724,7 +725,7 @@ export default function DetalhesMaterial() {
             styles.botaoVoltar
           }
           onPress={() =>
-            router.back()
+            voltar("/biblioteca")
           }
         >
           <Text
@@ -759,7 +760,7 @@ export default function DetalhesMaterial() {
           styles.voltarTopo
         }
         onPress={() =>
-          router.back()
+          voltar("/biblioteca")
         }
       >
         <Text

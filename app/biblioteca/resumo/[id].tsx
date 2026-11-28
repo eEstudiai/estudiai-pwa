@@ -2,6 +2,7 @@ import React, {
   useCallback,
   useState,
 } from "react";
+import { voltar } from "../../../services/navegacao";
 
 import {
   View,
@@ -967,7 +968,7 @@ export default function ResumoMaterialScreen() {
         <Pressable
           style={styles.botaoVoltar}
           onPress={() =>
-            router.back()
+            voltar("/biblioteca")
           }
         >
           <Text
@@ -1004,7 +1005,7 @@ export default function ResumoMaterialScreen() {
         <Pressable
           style={styles.voltarTopo}
           onPress={() =>
-            router.back()
+            voltar("/biblioteca")
           }
         >
           <Text

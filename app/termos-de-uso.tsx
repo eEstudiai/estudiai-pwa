@@ -5,6 +5,7 @@ import {
   StyleSheet,
   Pressable,
 } from "react-native";
+import { voltar } from "../services/navegacao";
 
 import { router } from "expo-router";
 
@@ -17,7 +18,7 @@ export default function TermosDeUso() {
       >
         <Pressable
           style={styles.backButton}
-          onPress={() => router.back()}
+          onPress={() => voltar("/configuracoes")}
         >
           <Text style={styles.backText}>
             ← Voltar

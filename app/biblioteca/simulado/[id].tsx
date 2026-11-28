@@ -2,6 +2,7 @@
   useCallback,
   useState,
 } from "react";
+import { voltar } from "../../../services/navegacao";
 
 import {
   View,
@@ -474,7 +475,7 @@ export default function SimuladoMaterialScreen() {
             styles.botaoVoltar
           }
           onPress={() =>
-            router.back()
+            voltar("/biblioteca")
           }
         >
           <Text
@@ -513,7 +514,7 @@ export default function SimuladoMaterialScreen() {
           styles.voltarTopo
         }
         onPress={() =>
-          router.back()
+          voltar("/biblioteca")
         }
       >
         <Text

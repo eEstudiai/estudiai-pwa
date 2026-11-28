@@ -5,6 +5,7 @@ import {
   ScrollView,
   Pressable,
 } from "react-native";
+import { voltar } from "../services/navegacao";
 
 import { router } from "expo-router";
 import Constants from "expo-constants";
@@ -24,7 +25,7 @@ export default function SobreScreen() {
       <Pressable
         style={s.voltar}
         onPress={() =>
-          router.back()
+          voltar("/configuracoes")
         }
       >
         <Text
