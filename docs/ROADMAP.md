@@ -32,7 +32,7 @@ Fase 1 - Refinamentos
 Fase 2 - Desempenho e erros
 - [x] (1a versao no Historico: simulados) Painel de desempenho e progresso (acertos, erros, aproveitamento,
       evolucao, desempenho por assunto, atividades recentes)
-- [ ] Revisar meus erros (refazer questoes erradas; exercicios focados)
+- [x] (1a versao: pratica sem salvar resultado) Revisar meus erros (refazer questoes erradas; exercicios focados)
 - [ ] Painel de recomendacoes ("Sua maior dificuldade e X -> Estudar agora")
 
 Fase 3 - Simulado

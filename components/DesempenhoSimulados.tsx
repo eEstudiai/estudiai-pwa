@@ -1,7 +1,8 @@
 import { useCallback, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
-import { useFocusEffect } from "expo-router";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { router, useFocusEffect } from "expo-router";
 
+import { carregarErrosAtuais } from "../services/erros";
 import { supabase } from "../services/supabase";
 
 type TituloQuiz = { title: string | null };
@@ -89,6 +90,7 @@ function calcularResumo(tentativas: Tentativa[]): Resumo {
 
 export default function DesempenhoSimulados() {
   const [resumo, setResumo] = useState<Resumo | null>(null);
+  const [totalErros, setTotalErros] = useState(0);
 
   useFocusEffect(
     useCallback(() => {
@@ -127,6 +129,16 @@ export default function DesempenhoSimulados() {
       };
 
       void carregar();
+
+      carregarErrosAtuais()
+        .then((lista) => {
+          if (ativo) {
+            setTotalErros(lista.length);
+          }
+        })
+        .catch((error) => {
+          console.log("ERRO AO CONTAR ERROS:", error);
+        });
 
       return () => {
         ativo = false;
@@ -186,6 +198,18 @@ export default function DesempenhoSimulados() {
             ))}
           </View>
         </View>
+      ) : null}
+
+      {totalErros > 0 ? (
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => router.push("/revisar-erros" as any)}
+          style={s.botaoErros}
+        >
+          <Text style={s.botaoErrosTexto}>
+            Revisar meus erros ({totalErros})
+          </Text>
+        </Pressable>
       ) : null}
 
       {resumo.reforcar ? (
@@ -277,6 +301,18 @@ const s = StyleSheet.create({
     width: "100%",
     borderRadius: 6,
     backgroundColor: "#1769D2",
+  },
+  botaoErros: {
+    marginTop: 14,
+    backgroundColor: "#1769D2",
+    borderRadius: 14,
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  botaoErrosTexto: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: "800",
   },
   aviso: {
     marginTop: 14,

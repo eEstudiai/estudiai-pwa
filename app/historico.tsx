@@ -512,7 +512,7 @@ export default function Historico() {
                   }
                 >
                   Nenhuma questão
-                  resolvida ainda
+                  fotografada ainda
                 </Text>
 
                 <Text
