@@ -38,7 +38,7 @@ Fase 2 - Desempenho e erros
 Fase 3 - Simulado
 - [ ] Simulado 2.0 (quantidade, dificuldade, assuntos, cronometro, foco nas
       dificuldades)
-- [ ] Simulados sem repeticao excessiva (evitar perguntas ja usadas; ampliar
+- [x] (servidor: generate-quiz passa as ultimas 80 perguntas da apostila e pede questoes novas; PRECISA DE DEPLOY) Simulados sem repeticao excessiva (evitar perguntas ja usadas; ampliar
       cobertura dos assuntos da apostila)
 
 Fase 4 - Mapa Mental
