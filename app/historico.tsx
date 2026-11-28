@@ -23,6 +23,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { supabase } from "../services/supabase";
 import ConnectionStatus from "../components/ConnectionStatus";
+import DesempenhoSimulados from "../components/DesempenhoSimulados";
 
 type Resposta = {
   answer: string;
@@ -359,6 +360,8 @@ export default function Historico() {
               }
               message="Não foi possível carregar seu histórico. Verifique sua conexão com a internet e puxe a tela para baixo para tentar novamente."
             />
+
+            <DesempenhoSimulados />
 
             {!carregando &&
             !erroConexao &&

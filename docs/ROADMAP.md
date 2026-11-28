@@ -30,7 +30,7 @@ Fase 1 - Refinamentos
 - [ ] Comunicacao/branding do e-mail de confirmacao (painel Supabase)
 
 Fase 2 - Desempenho e erros
-- [ ] Painel de desempenho e progresso (acertos, erros, aproveitamento,
+- [x] (1a versao no Historico: simulados) Painel de desempenho e progresso (acertos, erros, aproveitamento,
       evolucao, desempenho por assunto, atividades recentes)
 - [ ] Revisar meus erros (refazer questoes erradas; exercicios focados)
 - [ ] Painel de recomendacoes ("Sua maior dificuldade e X -> Estudar agora")
