@@ -20,6 +20,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import {
   useCallback,
   useState,
+  useRef,
 } from "react";
 
 import Constants from "expo-constants";
@@ -193,11 +194,19 @@ export default function ConfiguracoesScreen() {
       }
     }, []);
 
+  // Tela cheia de carregamento so na primeira vez; ao voltar de outra tela,
+  // atualiza em segundo plano.
+  const primeiraCarga = useRef(true);
+
   useFocusEffect(
     useCallback(() => {
-      setCarregando(true);
+      if (primeiraCarga.current) {
+        setCarregando(true);
+      }
 
-      carregarDados();
+      Promise.resolve(carregarDados()).finally(() => {
+        primeiraCarga.current = false;
+      });
     }, [carregarDados])
   );
 

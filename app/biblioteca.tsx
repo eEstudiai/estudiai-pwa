@@ -12,6 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import {
   useCallback,
   useState,
+  useRef,
 } from "react";
 
 import {
@@ -160,11 +161,19 @@ export default function Biblioteca() {
     A lista será atualizada
     automaticamente.
   */
+  // Tela cheia de carregamento so na primeira vez; ao voltar de outra tela,
+  // atualiza em segundo plano.
+  const primeiraCarga = useRef(true);
+
   useFocusEffect(
     useCallback(() => {
-      setCarregando(true);
+      if (primeiraCarga.current) {
+        setCarregando(true);
+      }
 
-      carregarMateriais();
+      Promise.resolve(carregarMateriais()).finally(() => {
+        primeiraCarga.current = false;
+      });
     }, [carregarMateriais])
   );
 

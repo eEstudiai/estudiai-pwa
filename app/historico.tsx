@@ -12,6 +12,7 @@ import {
 import {
   useCallback,
   useState,
+  useRef,
 } from "react";
 
 import {
@@ -204,11 +205,19 @@ export default function Historico() {
       }
     };
 
+  // Tela cheia de carregamento so na primeira vez; ao voltar de outra tela,
+  // atualiza em segundo plano.
+  const primeiraCarga = useRef(true);
+
   useFocusEffect(
     useCallback(() => {
-      setCarregando(true);
+      if (primeiraCarga.current) {
+        setCarregando(true);
+      }
 
-      carregarHistorico();
+      Promise.resolve(carregarHistorico()).finally(() => {
+        primeiraCarga.current = false;
+      });
 
       return () => {};
     }, [])

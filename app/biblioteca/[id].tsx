@@ -1,6 +1,7 @@
 import React, {
   useCallback,
   useState,
+  useRef,
 } from "react";
 import { voltar } from "../../services/navegacao";
 
@@ -201,11 +202,19 @@ export default function DetalhesMaterial() {
       }
     }, [id]);
 
+  // Tela cheia de carregamento so na primeira vez; ao voltar de outra tela,
+  // atualiza em segundo plano.
+  const primeiraCarga = useRef(true);
+
   useFocusEffect(
     useCallback(() => {
-      setCarregando(true);
+      if (primeiraCarga.current) {
+        setCarregando(true);
+      }
 
-      carregarMaterial();
+      Promise.resolve(carregarMaterial()).finally(() => {
+        primeiraCarga.current = false;
+      });
     }, [carregarMaterial])
   );
 
