@@ -8,6 +8,7 @@ import {
   Alert,
   Modal,
   Image,
+  TextInput,
   PanResponder,
   useWindowDimensions,
   Platform,
@@ -313,6 +314,12 @@ export default function QuestaoScreen() {
 
   const [explicacaoAberta, setExplicacaoAberta] =
     useState(false);
+
+  const [textoDigitado, setTextoDigitado] =
+    useState("");
+
+  const [perguntaEnviada, setPerguntaEnviada] =
+    useState<string | null>(null);
 
   const [etapaAnalise, setEtapaAnalise] =
     useState(0);
@@ -665,9 +672,14 @@ export default function QuestaoScreen() {
     };
 
   const analisarQuestao =
-    async () => {
+    async (textoPergunta?: string) => {
+      const pergunta =
+        typeof textoPergunta === "string"
+          ? textoPergunta.trim()
+          : "";
+
       if (
-        !imagemUri ||
+        (!imagemUri && !pergunta) ||
         carregando
       ) {
         return;
@@ -694,10 +706,13 @@ export default function QuestaoScreen() {
         setCarregando(true);
         setResultado(null);
         setErroConexao(false);
+        setPerguntaEnviada(pergunta || null);
 
-        const base64 = await lerImagemBase64(imagemUri);
+        const base64 = pergunta
+          ? null
+          : await lerImagemBase64(imagemUri as string);
 
-        if (!base64) {
+        if (!pergunta && !base64) {
           throw new Error(
             "Não foi possível converter a imagem."
           );
@@ -724,10 +739,13 @@ export default function QuestaoScreen() {
               {
                 body: {
                   questionText:
-                    "Questão enviada por imagem.",
+                    pergunta || "Questão enviada por imagem.",
+
+                  typedQuestion:
+                    pergunta || undefined,
 
                   imageBase64:
-                    base64,
+                    base64 || undefined,
 
                   imageMimeType:
                     imagemMimeType,
@@ -910,6 +928,8 @@ export default function QuestaoScreen() {
   }, [carregando]);
 
   const novaQuestao = () => {
+    setTextoDigitado("");
+    setPerguntaEnviada(null);
     setImagemUri(null);
     setImagemMimeType("image/jpeg");
     setResultado(null);
@@ -1047,7 +1067,7 @@ export default function QuestaoScreen() {
         message="Não foi possível comunicar com o EstudaIA. Verifique sua conexão com a internet e tente analisar a questão novamente."
       />
 
-      {!imagemUri ? (
+      {!imagemUri && !perguntaEnviada ? (
         <>
           <View
             style={s.cardCamera}
@@ -1117,6 +1137,45 @@ export default function QuestaoScreen() {
                 }
               >
                 🖼️ Escolher da galeria
+              </Text>
+            </Pressable>
+          </View>
+
+          <View style={s.digitarCard}>
+            <Text style={s.digitarTitulo}>
+              ✍️ Ou digite uma pergunta
+            </Text>
+
+            <Text style={s.digitarTexto}>
+              Escreva a questão (com as alternativas, se tiver) ou uma
+              dúvida sobre suas apostilas.
+            </Text>
+
+            <TextInput
+              value={textoDigitado}
+              onChangeText={(v) => setTextoDigitado(v.slice(0, 2000))}
+              placeholder="Ex.: Qual a diferença entre subscritor e titular?"
+              placeholderTextColor="#9CA3AF"
+              multiline
+              style={s.digitarCampo}
+            />
+
+            <Text style={s.digitarContador}>
+              {textoDigitado.length}/2000
+            </Text>
+
+            <Pressable
+              disabled={textoDigitado.trim().length < 8 || !questionAiEnabled}
+              style={({ pressed }) => [
+                s.botaoAnalisar,
+                (textoDigitado.trim().length < 8 || !questionAiEnabled) &&
+                  s.botaoDesabilitado,
+                pressed && s.botaoPressionado,
+              ]}
+              onPress={() => analisarQuestao(textoDigitado)}
+            >
+              <Text style={s.botaoAnalisarTexto}>
+                ✨ Responder pergunta
               </Text>
             </Pressable>
           </View>
@@ -1295,7 +1354,7 @@ export default function QuestaoScreen() {
                     s.botaoPressionado,
                 ]}
                 onPress={
-                  analisarQuestao
+                  () => analisarQuestao()
                 }
               >
                 <Text
@@ -1309,6 +1368,15 @@ export default function QuestaoScreen() {
             </View>
           ) : null}
         </>
+      ) : null}
+
+      {perguntaEnviada ? (
+        <View style={s.cardImagem}>
+          <Text style={s.imagemTitulo}>Sua pergunta</Text>
+          <Text style={[s.textoNormal, { marginTop: 8 }]}>
+            {perguntaEnviada}
+          </Text>
+        </View>
       ) : null}
 
       {carregando ? (
@@ -1743,6 +1811,49 @@ const s = StyleSheet.create({
 
   botaoDesabilitado: {
     opacity: 0.45,
+  },
+
+  digitarCard: {
+    marginTop: 14,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 18,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: "#E8ECF2",
+  },
+
+  digitarTitulo: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: "#111827",
+  },
+
+  digitarTexto: {
+    fontSize: 13,
+    color: "#6B7280",
+    marginTop: 4,
+    marginBottom: 10,
+    lineHeight: 19,
+  },
+
+  digitarCampo: {
+    minHeight: 110,
+    borderWidth: 1,
+    borderColor: "#D1D5DB",
+    borderRadius: 12,
+    padding: 12,
+    fontSize: 15,
+    color: "#111827",
+    textAlignVertical: "top",
+    backgroundColor: "#F9FAFB",
+  },
+
+  digitarContador: {
+    alignSelf: "flex-end",
+    fontSize: 11,
+    color: "#9CA3AF",
+    marginTop: 4,
+    marginBottom: 10,
   },
 
   dicasCard: {

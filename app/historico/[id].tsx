@@ -9,6 +9,7 @@ import {
   Alert,
   Platform,
 } from "react-native";
+import { avisar } from "../../services/avisos";
 import { voltar } from "../../services/navegacao";
 import ImagemAjustada from "../../components/ImagemAjustada";
 import { abrirApostilaNaPagina, nomeAmigavelApostila } from "../../services/pdf";
@@ -459,7 +460,7 @@ export default function HistoricoDetalhe() {
         if (Platform.OS === "web") {
           window.alert(mensagem);
         } else {
-          Alert.alert("Erro", mensagem);
+          avisar("Erro", mensagem);
         }
       } finally {
         setExcluindo(false);
@@ -603,6 +604,16 @@ export default function HistoricoDetalhe() {
       {imageUrl ? (
         <View style={s.cardImagem}>
           <ImagemAjustada uri={imageUrl} alturaMaxima={520} />
+        </View>
+      ) : questao.question_text &&
+        questao.question_text !== "Questão enviada por imagem." ? (
+        <View style={s.cardImagem}>
+          <Text style={{ fontSize: 12, fontWeight: "800", color: "#6B7280" }}>
+            SUA PERGUNTA
+          </Text>
+          <Text style={{ fontSize: 15, color: "#111827", marginTop: 6, lineHeight: 22 }}>
+            {questao.question_text}
+          </Text>
         </View>
       ) : null}
 

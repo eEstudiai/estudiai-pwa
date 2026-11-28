@@ -3,6 +3,7 @@ import React, {
   useState,
   useRef,
 } from "react";
+import { avisar } from "../../services/avisos";
 import { voltar } from "../../services/navegacao";
 
 import {
@@ -259,10 +260,7 @@ export default function DetalhesMaterial() {
             error
           );
 
-          Alert.alert(
-            "Erro",
-            "Não foi possível abrir o PDF."
-          );
+          avisar("Erro", "Não foi possível abrir o PDF.");
 
           return;
         }
@@ -273,10 +271,7 @@ export default function DetalhesMaterial() {
           );
 
         if (!podeAbrir) {
-          Alert.alert(
-            "Erro",
-            "Este dispositivo não conseguiu abrir o PDF."
-          );
+          avisar("Erro", "Este dispositivo não conseguiu abrir o PDF.");
 
           return;
         }
@@ -290,10 +285,7 @@ export default function DetalhesMaterial() {
           error
         );
 
-        Alert.alert(
-          "Erro",
-          "Não foi possível abrir o PDF."
-        );
+        avisar("Erro", "Não foi possível abrir o PDF.");
       } finally {
         setAbrindoPDF(false);
       }

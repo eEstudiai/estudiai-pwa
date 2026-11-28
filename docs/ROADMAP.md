@@ -23,7 +23,7 @@ precisa ser revisado/portado para o app nativo.
 Fase 1 - Refinamentos
 - [x] Avisos/erros visiveis na web (avisar() + AvisoGlobal) em biblioteca,
       mapa, resumo, simulado e resultado do simulado
-- [ ] Mensagens de carregamento/erro mais claras; feedback de falha de
+- [x] (erros de PDF em biblioteca/[id] e Historico/[id] agora visiveis na web) [ ] Mensagens de carregamento/erro mais claras; feedback de falha de
       upload/conexao
 - [ ] Melhorar apresentacao do Historico
 - [ ] Revisao de textos e pequenos ajustes visuais
@@ -50,12 +50,13 @@ Fase 5 - Fonte e confianca
 - [x] Camera no celular (web/iOS): usa a camera nativa do aparelho (foco, zoom, flash, alta resolucao); desktop segue com camera do navegador. Android app ja usa camera nativa
 - [x] Resultado da questao: explicacao recolhida ("Ver explicacao completa"), etapas durante a analise, imagem sem faixa cinza, nome da apostila legivel
 - [x] Foto ilegivel: aviso com dica, botao "Tirar outra foto" e uso devolvido (answer-question usa refund_feature_usage)
-- [ ] Miniatura da foto no resultado (toque abre em tela cheia)
+- [x] Foto da questao ja fica visivel acima do resultado (miniatura separada nao necessaria)
 - [x] Fonte da resposta (apostila, pagina e botao "Abrir PDF na pagina N" em questao e historico; trecho exato fica para depois)
-- [ ] Questao digitada: alem de fotografar, permitir que o usuario ESCREVA uma
-      pergunta (na tela de Questao) e a IA responda com base nas apostilas dele.
-      Observacoes: reaproveitar answer-question e o historico; contar no mesmo
-      limite de questoes do plano; avaliar escolher qual apostila usar (ou todas).
+- [x] Questao digitada: campo de texto na tela de Questao ("Ou digite uma pergunta");
+      app envia typedQuestion para answer-question (pula a leitura da foto, mesmo
+      limite de questoes, aparece no Historico como "SUA PERGUNTA").
+      PRECISA DE DEPLOY da answer-question. Pendente: escolher qual apostila usar
+      (hoje usa todas) e testar duvidas abertas (nao so questoes de alternativas).
 
 Fase 6 - Novos recursos
 - [ ] Flashcards inteligentes com repeticao espacada (Nao sei / Dificil /

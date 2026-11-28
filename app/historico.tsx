@@ -631,15 +631,20 @@ export default function Historico() {
                       s.semImagemIcone
                     }
                   >
-                    📷
+                    ✍️
                   </Text>
 
                   <Text
                     style={
                       s.semImagemTexto
                     }
+                    numberOfLines={2}
                   >
-                    Questão sem imagem
+                    {item.question_text &&
+                    item.question_text !==
+                      "Questão enviada por imagem."
+                      ? item.question_text
+                      : "Pergunta digitada"}
                   </Text>
                 </View>
               )}
