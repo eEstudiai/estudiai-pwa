@@ -1,6 +1,7 @@
 import React, {
   useCallback,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { voltar } from "../../../services/navegacao";
@@ -13,6 +14,7 @@ import {
   Pressable,
   ActivityIndicator,
   RefreshControl,
+  Linking,
 } from "react-native";
 
 import {
@@ -28,6 +30,7 @@ type Material = {
   id: string;
   title: string;
   status: string;
+  file_path?: string | null;
 };
 
 type TipoNo =
@@ -103,6 +106,16 @@ export default function MapaMentalScreen() {
 
   const [expandidos, setExpandidos] =
     useState<Set<string>>(new Set());
+
+  const scrollRef = useRef<ScrollView>(null);
+  const areaMapaY = useRef(0);
+  const posicaoRamos = useRef<Record<string, number>>({});
+
+  const [topicoEstudo, setTopicoEstudo] =
+    useState<string | null>(null);
+
+  const [abrindoPdf, setAbrindoPdf] =
+    useState(false);
 
   const normalizarNo = (
     valor: unknown,
@@ -275,7 +288,8 @@ export default function MapaMentalScreen() {
           .select(`
             id,
             title,
-            status
+            status,
+            file_path
           `)
           .eq("id", id)
           .eq("user_id", user.id)
@@ -966,6 +980,75 @@ export default function MapaMentalScreen() {
     );
   };
 
+  const irParaTopico = (idNo: string) => {
+    setExpandidos((anteriores) => new Set(anteriores).add(idNo));
+
+    const y = posicaoRamos.current[idNo];
+
+    if (typeof y === "number") {
+      scrollRef.current?.scrollTo({
+        y: Math.max(0, areaMapaY.current + y - 12),
+        animated: true,
+      });
+    }
+  };
+
+  const coletarDescendentes = (no: NoMapa): NoMapa[] => {
+    const lista: NoMapa[] = [];
+
+    const percorrer = (nos: NoMapa[]) => {
+      nos.forEach((item) => {
+        lista.push(item);
+
+        if (item.children && item.children.length > 0) {
+          percorrer(item.children);
+        }
+      });
+    };
+
+    percorrer(no.children || []);
+
+    return lista;
+  };
+
+  const menorPagina = (no: NoMapa): number | null => {
+    const paginas = [no, ...coletarDescendentes(no)]
+      .flatMap((item) => item.source_pages || [])
+      .filter((pagina) => typeof pagina === "number" && pagina > 0);
+
+    return paginas.length > 0 ? Math.min(...paginas) : null;
+  };
+
+  const abrirPdfNaPagina = async (pagina: number | null) => {
+    if (!material?.file_path) {
+      avisar("Não foi possível abrir o PDF", "O arquivo desta apostila não foi encontrado.");
+      return;
+    }
+
+    try {
+      setAbrindoPdf(true);
+
+      const { data, error } = await supabase.storage
+        .from("study-materials")
+        .createSignedUrl(material.file_path, 60 * 10);
+
+      if (error || !data?.signedUrl) {
+        console.log("ERRO AO GERAR LINK DO PDF:", error);
+        avisar("Não foi possível abrir o PDF", "Tente novamente em instantes.");
+        return;
+      }
+
+      await Linking.openURL(
+        pagina ? `${data.signedUrl}#page=${pagina}` : data.signedUrl
+      );
+    } catch (error) {
+      console.log("ERRO AO ABRIR PDF:", error);
+      avisar("Não foi possível abrir o PDF", "Tente novamente em instantes.");
+    } finally {
+      setAbrindoPdf(false);
+    }
+  };
+
   const renderizarRamoVisual = (
     no: NoMapa,
     index: number
@@ -978,7 +1061,13 @@ export default function MapaMentalScreen() {
     const paginas = formatarPaginas(no.source_pages);
 
     return (
-      <View key={`ramo-${index}-${no.id}`} style={styles.ramoVisual}>
+      <View
+        key={`ramo-${index}-${no.id}`}
+        style={styles.ramoVisual}
+        onLayout={(evento) => {
+          posicaoRamos.current[no.id] = evento.nativeEvent.layout.y;
+        }}
+      >
         <View style={styles.linhaCentralVertical} />
         <Pressable style={styles.ramoPrincipalCard} onPress={() => { if (possuiFilhos) alternarNo(no.id); }}>
           <View style={styles.ramoPrincipalTopo}>
@@ -995,6 +1084,63 @@ export default function MapaMentalScreen() {
             {paginas ? <View style={styles.badgePagina}><Text style={styles.badgePaginaTexto}>📖 {paginas}</Text></View> : null}
           </View> : null}
         </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          style={styles.estudarBotao}
+          onPress={() => {
+            setTopicoEstudo(topicoEstudo === no.id ? null : no.id);
+            setExpandidos((anteriores) => new Set(anteriores).add(no.id));
+          }}
+        >
+          <Text style={styles.estudarBotaoTexto}>
+            {topicoEstudo === no.id ? "Fechar estudo do tópico" : "📚 Estudar este tópico"}
+          </Text>
+        </Pressable>
+        {topicoEstudo === no.id ? (() => {
+          const pontos = coletarDescendentes(no).slice(0, 8);
+          const pagina = menorPagina(no);
+
+          return (
+            <View style={styles.painelEstudo}>
+              <Text style={styles.painelEstudoTitulo}>Estudando: {no.title}</Text>
+              {no.summary ? <Text style={styles.painelTexto}>{no.summary}</Text> : null}
+              {pontos.length > 0 ? (
+                <View style={styles.painelPontos}>
+                  <Text style={styles.painelSubtitulo}>Pontos principais</Text>
+                  {pontos.map((ponto, pontoIndex) => (
+                    <Text key={`ponto-${no.id}-${pontoIndex}`} style={styles.painelPonto}>
+                      • {ponto.title}{ponto.summary ? ` — ${ponto.summary.length > 140 ? `${ponto.summary.slice(0, 140)}…` : ponto.summary}` : ""}
+                    </Text>
+                  ))}
+                </View>
+              ) : null}
+              <Pressable
+                accessibilityRole="button"
+                style={styles.painelBotao}
+                disabled={abrindoPdf}
+                onPress={() => void abrirPdfNaPagina(pagina)}
+              >
+                <Text style={styles.painelBotaoTexto}>
+                  {abrindoPdf ? "Abrindo PDF..." : pagina ? `📖 Abrir PDF na página ${pagina}` : "📖 Abrir PDF"}
+                </Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                style={styles.painelBotaoSec}
+                onPress={() => router.push(`/biblioteca/resumo/${id}` as any)}
+              >
+                <Text style={styles.painelBotaoSecTexto}>✨ Ver resumo da apostila</Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                style={styles.painelBotaoSec}
+                onPress={() => router.push(`/biblioteca/simulado/${id}` as any)}
+              >
+                <Text style={styles.painelBotaoSecTexto}>📝 Fazer um simulado da apostila</Text>
+              </Pressable>
+            </View>
+          );
+        })() : null}
         {possuiFilhos && aberto ? <View style={styles.subRamosArea}>
           <View style={styles.conectorVertical} />
           {filhos.map((filho, filhoIndex) => (
@@ -1094,6 +1240,7 @@ export default function MapaMentalScreen() {
 
   return (
     <ScrollView
+      ref={scrollRef}
       style={styles.tela}
       contentContainerStyle={
         styles.container
@@ -1295,9 +1442,32 @@ export default function MapaMentalScreen() {
             </View>
           ) : null}
 
+          {conteudo.nodes.length > 1 ? (
+            <View style={styles.indiceCard}>
+              <Text style={styles.indiceTitulo}>Ir para um tópico</Text>
+              <View style={styles.indiceChips}>
+                {conteudo.nodes.map((no, indiceNo) => (
+                  <Pressable
+                    key={`indice-${indiceNo}-${no.id}`}
+                    accessibilityRole="button"
+                    style={styles.indiceChip}
+                    onPress={() => irParaTopico(no.id)}
+                  >
+                    <Text style={styles.indiceChipTexto}>{no.title}</Text>
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+          ) : null}
+
           <Text style={styles.secaoTitulo}>Mapa visual</Text>
           <Text style={styles.mapaInstrucao}>Toque em um ramo para visualizar seus conceitos.</Text>
-          <View style={styles.mapaVisualArea}>
+          <View
+            style={styles.mapaVisualArea}
+            onLayout={(evento) => {
+              areaMapaY.current = evento.nativeEvent.layout.y;
+            }}
+          >
             <View style={styles.temaCentralMini}>
               <Text style={styles.temaCentralMiniIcone}>🧠</Text>
               <Text style={styles.temaCentralMiniTitulo}>{conteudo.title}</Text>
@@ -1592,6 +1762,23 @@ const styles =
     },
 
     mapaInstrucao: { marginTop: -4, marginBottom: 14, fontSize: 12, lineHeight: 18, color: "#6B7280" },
+    indiceCard: { backgroundColor: "#FFFFFF", borderRadius: 18, borderWidth: 1, borderColor: "#DBEAFE", padding: 14, marginBottom: 14 },
+    indiceTitulo: { fontSize: 14, fontWeight: "800", color: "#1E3A8A", marginBottom: 10 },
+    indiceChips: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+    indiceChip: { backgroundColor: "#EFF6FF", borderWidth: 1, borderColor: "#BFDBFE", borderRadius: 999, paddingVertical: 7, paddingHorizontal: 12 },
+    indiceChipTexto: { fontSize: 12, fontWeight: "700", color: "#1D4ED8" },
+    estudarBotao: { width: "92%", alignSelf: "center", marginTop: 8, paddingVertical: 9, borderRadius: 12, backgroundColor: "#DBEAFE", alignItems: "center" },
+    estudarBotaoTexto: { fontSize: 13, fontWeight: "800", color: "#1D4ED8" },
+    painelEstudo: { width: "92%", alignSelf: "center", marginTop: 8, backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#BFDBFE", borderRadius: 16, padding: 14 },
+    painelEstudoTitulo: { fontSize: 15, fontWeight: "900", color: "#1E3A8A", marginBottom: 6 },
+    painelTexto: { fontSize: 13, lineHeight: 19, color: "#374151" },
+    painelPontos: { marginTop: 10 },
+    painelSubtitulo: { fontSize: 12, fontWeight: "800", color: "#1D4ED8", marginBottom: 4 },
+    painelPonto: { fontSize: 12, lineHeight: 18, color: "#374151", marginBottom: 3 },
+    painelBotao: { marginTop: 12, backgroundColor: "#1D4ED8", borderRadius: 12, paddingVertical: 11, alignItems: "center" },
+    painelBotaoTexto: { fontSize: 13, fontWeight: "800", color: "#FFFFFF" },
+    painelBotaoSec: { marginTop: 8, backgroundColor: "#EFF6FF", borderRadius: 12, paddingVertical: 11, alignItems: "center" },
+    painelBotaoSecTexto: { fontSize: 13, fontWeight: "800", color: "#1D4ED8" },
     mapaVisualArea: { backgroundColor: "#FFFFFF", borderRadius: 22, paddingHorizontal: 14, paddingTop: 18, paddingBottom: 20, marginBottom: 16, overflow: "hidden" },
     temaCentralMini: { alignSelf: "center", width: "88%", backgroundColor: "#1D4ED8", borderRadius: 18, paddingHorizontal: 16, paddingVertical: 15, alignItems: "center" },
     temaCentralMiniIcone: { fontSize: 24, marginBottom: 5 },

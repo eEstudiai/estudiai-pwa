@@ -42,9 +42,9 @@ Fase 3 - Simulado
       cobertura dos assuntos da apostila)
 
 Fase 4 - Mapa Mental
-- [ ] Indice/navegacao rapida pelos topicos principais (manter modelo
+- [x] Indice/navegacao rapida pelos topicos principais (manter modelo
       expansivel aprovado)
-- [ ] "Estudar este topico" (resumo, explicacao ou questoes do assunto)
+- [x] (1a versao: pontos do topico, abrir PDF na pagina, atalhos para resumo e simulado; falta gerar questoes/explicacao so do topico com IA) "Estudar este topico" (resumo, explicacao ou questoes do assunto)
 
 Fase 5 - Fonte e confianca
 - [ ] Fonte da resposta (apostila, pagina/trecho; futuramente abrir o trecho)
