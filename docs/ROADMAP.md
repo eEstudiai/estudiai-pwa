@@ -47,7 +47,7 @@ Fase 4 - Mapa Mental
 - [x] (1a versao: pontos do topico, abrir PDF na pagina, atalhos para resumo e simulado; falta gerar questoes/explicacao so do topico com IA) "Estudar este topico" (resumo, explicacao ou questoes do assunto)
 
 Fase 5 - Fonte e confianca
-- [ ] Fonte da resposta (apostila, pagina/trecho; futuramente abrir o trecho)
+- [x] Fonte da resposta (apostila, pagina e botao "Abrir PDF na pagina N" em questao e historico; trecho exato fica para depois)
 - [ ] Questao digitada: alem de fotografar, permitir que o usuario ESCREVA uma
       pergunta (na tela de Questao) e a IA responda com base nas apostilas dele.
       Observacoes: reaproveitar answer-question e o historico; contar no mesmo

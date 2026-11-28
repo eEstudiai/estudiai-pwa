@@ -31,6 +31,7 @@ import * as FileSystem from "expo-file-system/legacy";
 
 import { supabase } from "../services/supabase";
 import ConnectionStatus from "../components/ConnectionStatus";
+import { abrirApostilaNaPagina } from "../services/pdf";
 
 type ResultadoQuestao = {
   alternativa: string | null;
@@ -39,6 +40,7 @@ type ResultadoQuestao = {
   confianca: number;
   fonte: string | null;
   pagina: number | null;
+  materialId: string | null;
   hp12c: string | null;
   confirmadoPeloMaterial: boolean;
   questionId: string | null;
@@ -302,6 +304,9 @@ export default function QuestaoScreen() {
 
   const [resultado, setResultado] =
     useState<ResultadoQuestao | null>(null);
+
+  const [abrindoPdf, setAbrindoPdf] =
+    useState(false);
 
   const [questionAiEnabled, setQuestionAiEnabled] =
     useState(false);
@@ -787,6 +792,10 @@ export default function QuestaoScreen() {
 
           pagina:
             data?.sourcePage ??
+            null,
+
+          materialId:
+            data?.sourceMaterialId ??
             null,
 
           hp12c:
@@ -1434,6 +1443,28 @@ export default function QuestaoScreen() {
                     .pagina
                 }
               </Text>
+
+              {resultado.materialId ? (
+                <Pressable
+                  accessibilityRole="button"
+                  style={s.abrirPdfBotao}
+                  disabled={abrindoPdf}
+                  onPress={async () => {
+                    setAbrindoPdf(true);
+                    await abrirApostilaNaPagina(
+                      resultado.materialId as string,
+                      resultado.pagina
+                    );
+                    setAbrindoPdf(false);
+                  }}
+                >
+                  <Text style={s.abrirPdfTexto}>
+                    {abrindoPdf
+                      ? "Abrindo PDF..."
+                      : `📖 Abrir PDF na página ${resultado.pagina}`}
+                  </Text>
+                </Pressable>
+              ) : null}
             </View>
           ) : null}
 
@@ -1863,6 +1894,20 @@ const s = StyleSheet.create({
     fontSize: 28,
     fontWeight: "900",
     color: "#15803D",
+  },
+
+  abrirPdfBotao: {
+    marginTop: 12,
+    backgroundColor: "#1D4ED8",
+    borderRadius: 12,
+    paddingVertical: 11,
+    alignItems: "center",
+  },
+
+  abrirPdfTexto: {
+    fontSize: 13,
+    fontWeight: "800",
+    color: "#FFFFFF",
   },
 
   fonte: {

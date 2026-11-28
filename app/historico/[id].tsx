@@ -10,6 +10,7 @@ import {
   Platform,
 } from "react-native";
 import { voltar } from "../../services/navegacao";
+import { abrirApostilaNaPagina } from "../../services/pdf";
 
 import {
   router,
@@ -83,6 +84,9 @@ export default function HistoricoDetalhe() {
     useState<string | null>(
       null
     );
+
+  const [abrindoPdf, setAbrindoPdf] =
+    useState(false);
 
   const [
     carregando,
@@ -753,6 +757,28 @@ export default function HistoricoDetalhe() {
                   resposta.source_page
                 }
               </Text>
+
+              {resposta.source_material_id ? (
+                <Pressable
+                  accessibilityRole="button"
+                  style={s.abrirPdfBotao}
+                  disabled={abrindoPdf}
+                  onPress={async () => {
+                    setAbrindoPdf(true);
+                    await abrirApostilaNaPagina(
+                      resposta.source_material_id as string,
+                      resposta.source_page
+                    );
+                    setAbrindoPdf(false);
+                  }}
+                >
+                  <Text style={s.abrirPdfTexto}>
+                    {abrindoPdf
+                      ? "Abrindo PDF..."
+                      : `📖 Abrir PDF na página ${resposta.source_page}`}
+                  </Text>
+                </Pressable>
+              ) : null}
             </View>
           ) : null}
 
@@ -1038,6 +1064,20 @@ const s =
       fontSize: 27,
       fontWeight: "900",
       color: "#15803D",
+    },
+
+    abrirPdfBotao: {
+      marginTop: 12,
+      backgroundColor: "#1D4ED8",
+      borderRadius: 12,
+      paddingVertical: 11,
+      alignItems: "center",
+    },
+
+    abrirPdfTexto: {
+      fontSize: 13,
+      fontWeight: "800",
+      color: "#FFFFFF",
     },
 
     fonte: {
