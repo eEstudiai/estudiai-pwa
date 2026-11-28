@@ -1368,6 +1368,12 @@ export default function QuestaoScreen() {
                 Esta tentativa não conta no seu limite.
               </Text>
 
+              {resultado?.explicacao ? (
+                <Text style={[s.avisoNaoConfirmadoTexto, { marginTop: 8, fontStyle: "italic" }]}>
+                  Trecho com dúvida: “…{resultado.explicacao}…”
+                </Text>
+              ) : null}
+
               <Pressable
                 accessibilityRole="button"
                 style={s.abrirPdfBotao}
