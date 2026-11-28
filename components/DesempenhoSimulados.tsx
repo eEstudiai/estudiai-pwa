@@ -1,8 +1,8 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { router, useFocusEffect } from "expo-router";
 
-import { carregarErrosAtuais } from "../services/erros";
+import { aoMudarErros, carregarErrosAtuais } from "../services/erros";
 import { supabase } from "../services/supabase";
 
 type TituloQuiz = { title: string | null };
@@ -145,6 +145,27 @@ export default function DesempenhoSimulados() {
       };
     }, [])
   );
+
+  useEffect(() => {
+    let ativo = true;
+
+    const desinscrever = aoMudarErros(() => {
+      carregarErrosAtuais()
+        .then((lista) => {
+          if (ativo) {
+            setTotalErros(lista.length);
+          }
+        })
+        .catch((error) => {
+          console.log("ERRO AO ATUALIZAR ERROS:", error);
+        });
+    });
+
+    return () => {
+      ativo = false;
+      desinscrever();
+    };
+  }, []);
 
   if (!resumo) {
     return null;

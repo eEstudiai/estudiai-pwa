@@ -70,6 +70,19 @@ function primeiro<T>(valor: T | T[] | null): T | null {
   return Array.isArray(valor) ? valor[0] ?? null : valor;
 }
 
+type Ouvinte = () => void;
+
+const ouvintes = new Set<Ouvinte>();
+
+/* Avisa telas abertas (ex.: painel do Historico) que a lista de erros mudou. */
+export function aoMudarErros(fn: Ouvinte) {
+  ouvintes.add(fn);
+
+  return () => {
+    ouvintes.delete(fn);
+  };
+}
+
 /*
   Registra o resultado de uma questao refeita na revisao de erros.
   Falhas apenas vao para o log: nao devem atrapalhar a revisao.
@@ -82,7 +95,10 @@ export async function registrarRevisao(questaoId: string, acertou: boolean) {
 
     if (error) {
       console.log("ERRO AO REGISTRAR REVISAO:", error);
+      return;
     }
+
+    ouvintes.forEach((fn) => fn());
   } catch (error) {
     console.log("ERRO INESPERADO AO REGISTRAR REVISAO:", error);
   }
