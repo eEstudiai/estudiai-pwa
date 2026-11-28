@@ -167,9 +167,17 @@ export default function Historico() {
           return;
         }
 
+        /*
+          Tentativas que falharam (sem resposta salva) nao aparecem
+          no Historico nem entram na contagem.
+        */
         const questoes =
-          (data as QuestaoHistorico[]) ||
-          [];
+          ((data as QuestaoHistorico[]) ||
+            []).filter(
+            (questao) =>
+              Array.isArray(questao.answers) &&
+              questao.answers.length > 0
+          );
 
         const questoesComImagem =
           await Promise.all(
@@ -638,7 +646,7 @@ export default function Historico() {
                     style={
                       s.semImagemTexto
                     }
-                    numberOfLines={2}
+                    numberOfLines={3}
                   >
                     {item.question_text &&
                     item.question_text !==
@@ -1014,7 +1022,9 @@ const s =
     },
 
     semImagem: {
-      height: 82,
+      minHeight: 82,
+      paddingVertical: 12,
+      paddingHorizontal: 14,
       borderRadius: 14,
       marginBottom: 14,
       backgroundColor: "#F8FAFC",
@@ -1030,9 +1040,11 @@ const s =
     },
 
     semImagemTexto: {
-      marginTop: 5,
-      fontSize: 12,
-      color: "#94A3B8",
+      marginTop: 6,
+      fontSize: 14,
+      lineHeight: 20,
+      color: "#334155",
+      textAlign: "center",
     },
 
     label: {
