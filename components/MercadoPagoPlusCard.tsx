@@ -479,7 +479,6 @@ export default function MercadoPagoPlusCard({
           )}
           {offer?.configured &&
           cardPublicKey &&
-          offer.webSubscriptionStatus !== "pending" &&
           offer.webSubscriptionStatus !== "authorized" ? (
             showCardForm ? (
               <>
