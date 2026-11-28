@@ -315,6 +315,9 @@ export default function QuestaoScreen() {
   const [explicacaoAberta, setExplicacaoAberta] =
     useState(false);
 
+  const [erroAnalise, setErroAnalise] =
+    useState<{ titulo: string; mensagem: string } | null>(null);
+
   const [textoDigitado, setTextoDigitado] =
     useState("");
 
@@ -707,6 +710,7 @@ export default function QuestaoScreen() {
         setResultado(null);
         setErroConexao(false);
         setPerguntaEnviada(pergunta || null);
+        setErroAnalise(null);
 
         const base64 = pergunta
           ? null
@@ -780,6 +784,8 @@ export default function QuestaoScreen() {
             error.message ||
             "Não foi possível analisar a questão.";
 
+          let veioDoServidor = false;
+
           try {
             const contexto: any =
               (error as any).context;
@@ -793,6 +799,10 @@ export default function QuestaoScreen() {
               const json =
                 await resposta.json();
 
+              if (json?.error || json?.message) {
+                veioDoServidor = true;
+              }
+
               mensagem =
                 json?.error ||
                 json?.message ||
@@ -802,30 +812,43 @@ export default function QuestaoScreen() {
             // Mantém a mensagem original.
           }
 
+          /*
+            Se o servidor respondeu com uma mensagem, o problema NAO e de
+            conexao (a mensagem "Edge Function returned a non-2xx" tambem
+            casava com o padrao de conexao e enganava o usuario).
+          */
           const erroDeConexao =
+            !veioDoServidor &&
             ehErroDeConexao(
               error.message,
               mensagem
             );
 
-          mostrarAvisoNaPlataforma(
+          setErroAnalise(
             erroDeConexao
-              ? "Erro de conexão"
-              : "Não foi possível analisar",
-            erroDeConexao
-              ? "Não foi possível analisar a questão. Verifique sua conexão com a internet e tente novamente."
-              : mensagem
+              ? {
+                  titulo: "Sem conexão",
+                  mensagem:
+                    "Não foi possível analisar. Verifique sua internet e tente novamente.",
+                }
+              : {
+                  titulo: "Não foi possível analisar",
+                  mensagem: veioDoServidor
+                    ? mensagem
+                    : "Algo deu errado ao analisar. Tente novamente em instantes.",
+                }
           );
 
           return;
         }
 
         if (!data?.ok) {
-          mostrarAvisoNaPlataforma(
-            "Não foi possível analisar",
-            data?.error ||
-              "Não foi possível analisar a questão."
-          );
+          setErroAnalise({
+            titulo: "Não foi possível analisar",
+            mensagem:
+              data?.error ||
+              "Não foi possível analisar a questão.",
+          });
 
           return;
         }
@@ -895,14 +918,19 @@ export default function QuestaoScreen() {
         const erroDeConexao =
           ehErroDeConexao(mensagemErro);
 
-        mostrarAvisoNaPlataforma(
+        setErroAnalise(
           erroDeConexao
-            ? "Erro de conexão"
-            : "Erro",
-          erroDeConexao
-            ? "Não foi possível analisar a questão. Verifique sua conexão com a internet e tente novamente."
-            : mensagemErro ||
-              "Não foi possível analisar a questão."
+            ? {
+                titulo: "Sem conexão",
+                mensagem:
+                  "Não foi possível analisar. Verifique sua internet e tente novamente.",
+              }
+            : {
+                titulo: "Não foi possível analisar",
+                mensagem:
+                  mensagemErro ||
+                  "Não foi possível analisar a questão.",
+              }
         );
       } finally {
         setCarregando(false);
@@ -928,6 +956,7 @@ export default function QuestaoScreen() {
   }, [carregando]);
 
   const novaQuestao = () => {
+    setErroAnalise(null);
     setTextoDigitado("");
     setPerguntaEnviada(null);
     setImagemUri(null);
@@ -1376,6 +1405,52 @@ export default function QuestaoScreen() {
           <Text style={[s.textoNormal, { marginTop: 8 }]}>
             {perguntaEnviada}
           </Text>
+        </View>
+      ) : null}
+
+      {erroAnalise && !carregando && !resultado ? (
+        <View style={s.avisoNaoConfirmado}>
+          <Text style={s.avisoNaoConfirmadoTitulo}>
+            ⚠️ {erroAnalise.titulo}
+          </Text>
+
+          <Text style={s.avisoNaoConfirmadoTexto}>
+            {erroAnalise.mensagem}
+          </Text>
+
+          <Pressable
+            accessibilityRole="button"
+            style={s.abrirPdfBotao}
+            onPress={() =>
+              analisarQuestao(perguntaEnviada ?? undefined)
+            }
+          >
+            <Text style={s.abrirPdfTexto}>🔄 Tentar novamente</Text>
+          </Pressable>
+
+          {perguntaEnviada ? (
+            <Pressable
+              accessibilityRole="button"
+              style={[s.abrirPdfBotao, { backgroundColor: "#0B1F4B" }]}
+              onPress={() => {
+                setTextoDigitado(perguntaEnviada);
+                setPerguntaEnviada(null);
+                setErroAnalise(null);
+              }}
+            >
+              <Text style={s.abrirPdfTexto}>✏️ Editar pergunta</Text>
+            </Pressable>
+          ) : null}
+
+          <Pressable
+            accessibilityRole="button"
+            style={{ marginTop: 12, alignItems: "center" }}
+            onPress={novaQuestao}
+          >
+            <Text style={{ color: "#1D4ED8", fontWeight: "800", fontSize: 14 }}>
+              ← Voltar
+            </Text>
+          </Pressable>
         </View>
       ) : null}
 
