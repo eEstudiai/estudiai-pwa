@@ -935,7 +935,7 @@ export default function QuestaoScreen() {
       ? removerMetadadosDaResposta(
           limparTextoIA(resultado.resposta)
         ).replace(
-          /^\s*Alternativa correta\s*:\s*\(?[A-Ea-e]\)?[.:\s)-]*/i,
+          /^\s*(?:A\s+)?alternativa\s+correta\s*(?::|é|e)?\s*(?:a\s+)?(?:letra\s+)?\(?[A-Ea-e]\)?[.:\s)-]*/i,
           ""
         )
       : "";
@@ -1016,7 +1016,7 @@ export default function QuestaoScreen() {
         <Text style={s.titulo}>Revisar foto</Text>
       </View>
       <Text style={s.subtitulo}>Confira a fotografia antes de usá-la. Você pode recortar a imagem para manter somente a questão e as alternativas.</Text>
-      <View style={s.revisaoCard}><Image source={{uri:fotoRevisaoUri}} style={s.revisaoImagem} resizeMode="contain"/></View>
+      <View style={s.revisaoCard}><ImagemAjustada uri={fotoRevisaoUri} alturaMaxima={520}/></View>
       <Pressable style={s.botaoRecortar} onPress={()=>setRecorteAberto(true)}><Text style={s.botaoRecortarTexto}>✂️ Recortar foto</Text></Pressable>
       <Pressable style={s.botaoRevisaoSecundario} onPress={tirarNovamenteNaRevisao}><Text style={s.botaoRevisaoSecundarioTexto}>📷 Tirar novamente</Text></Pressable>
       <Pressable style={s.botaoUsarFoto} onPress={usarFotoRevisada}><Text style={s.botaoUsarFotoTexto}>✓ Usar foto</Text></Pressable>
