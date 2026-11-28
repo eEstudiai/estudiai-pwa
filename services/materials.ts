@@ -2,7 +2,8 @@ import { supabase } from "./supabase";
 
 export async function uploadMaterial(
   uri: string,
-  fileName: string
+  fileName: string,
+  browserFile?: Blob
 ) {
   // 1. Confirma o usuário autenticado
   const {
@@ -17,13 +18,20 @@ export async function uploadMaterial(
   }
 
   // 2. Lê o PDF selecionado
-  const response = await fetch(uri);
-  const arrayBuffer =
-    await response.arrayBuffer();
+  let fileBody: Blob | ArrayBuffer;
+  if (browserFile) {
+    fileBody = browserFile;
+  } else {
+    const response = await fetch(uri);
+    if (!response.ok) {
+      throw new Error("Não foi possível ler o PDF selecionado.");
+    }
+    fileBody = await response.arrayBuffer();
+  }
 
   if (
-    !arrayBuffer ||
-    arrayBuffer.byteLength === 0
+    (fileBody instanceof Blob && fileBody.size === 0) ||
+    (fileBody instanceof ArrayBuffer && fileBody.byteLength === 0)
   ) {
     throw new Error(
       "O PDF selecionado está vazio ou não pôde ser lido."
@@ -49,7 +57,7 @@ export async function uploadMaterial(
       .from("study-materials")
       .upload(
         filePath,
-        arrayBuffer,
+        fileBody,
         {
           contentType:
             "application/pdf",
@@ -157,5 +165,42 @@ export async function uploadMaterial(
     );
   }
 
-  return data.material;
+  // O cadastro só está completo quando o processamento também foi iniciado.
+  // Se a IA falhar, preservamos o material enviado para que a falha fique visível
+  // na biblioteca e não apagamos o arquivo nem o registro recém-criado.
+  const {
+    data: processingData,
+    error: processingError,
+  } = await supabase.functions.invoke("process-material", {
+    body: { materialId: data.material.id },
+  });
+
+  if (processingError || processingData?.ok !== true) {
+    let message = processingError?.message || processingData?.error;
+    try {
+      const context: any = (processingError as any)?.context;
+      if (context) {
+        const response = context.clone ? context.clone() : context;
+        const json = await response.json();
+        message = json?.error || json?.message || message;
+      }
+    } catch {
+      // Keep the function's original error message.
+    }
+
+    return {
+      material: data.material,
+      processingError:
+        message ||
+        "O PDF foi salvo, mas o processamento não foi concluído.",
+    };
+  }
+
+  return {
+    material: {
+      ...data.material,
+      status: processingData.status || "ready",
+    },
+    processingError: null,
+  };
 }

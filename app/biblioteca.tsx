@@ -5,7 +5,6 @@ import {
   FlatList,
   RefreshControl,
   Pressable,
-  Alert,
 } from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -47,6 +46,9 @@ export default function Biblioteca() {
 
   const [enviando, setEnviando] =
     useState(false);
+
+  const [avisoEnvio, setAvisoEnvio] =
+    useState<{ texto: string; erro: boolean } | null>(null);
 
   const [erroConexao, setErroConexao] =
     useState(false);
@@ -181,6 +183,7 @@ export default function Biblioteca() {
           {
             type: "application/pdf",
             copyToCacheDirectory: true,
+            base64: false,
           }
         );
 
@@ -196,33 +199,31 @@ export default function Biblioteca() {
       }
 
       setEnviando(true);
+      setAvisoEnvio(null);
 
-      const material =
+      const resultadoEnvio =
         await uploadMaterial(
           arquivo.uri,
-          arquivo.name
+          arquivo.name,
+          arquivo.file
         );
 
-      Alert.alert(
-        "PDF enviado",
-        "O PDF foi adicionado à biblioteca."
+      setAvisoEnvio(
+        resultadoEnvio.processingError
+          ? {
+              texto: `PDF salvo, mas a preparação com IA falhou: ${resultadoEnvio.processingError}`,
+              erro: true,
+            }
+          : {
+              texto: "PDF enviado e preparado para estudo.",
+              erro: false,
+            }
       );
 
       await carregarMateriais();
-
-      /*
-        O processamento pela IA continua
-        desativado neste momento.
-
-        Portanto, uma nova apostila
-        permanecerá com status "pending"
-        até ativarmos novamente o
-        processamento pela API.
-      */
-
       console.log(
         "MATERIAL CRIADO:",
-        material.id
+        resultadoEnvio.material.id
       );
     } catch (error: any) {
       console.log(
@@ -239,15 +240,13 @@ export default function Biblioteca() {
           mensagemErro
         );
 
-      Alert.alert(
-        erroDeConexao
-          ? "Erro de conexão"
-          : "Erro",
-        erroDeConexao
+      setAvisoEnvio({
+        texto: erroDeConexao
           ? "Não foi possível enviar o PDF. Verifique sua conexão com a internet e tente novamente."
           : mensagemErro ||
-            "Não foi possível enviar o PDF. Verifique sua conexão e tente novamente."
-      );
+            "Não foi possível enviar o PDF. Verifique sua conexão e tente novamente.",
+        erro: true,
+      });
     } finally {
       setEnviando(false);
     }
@@ -313,6 +312,7 @@ export default function Biblioteca() {
           enviando && s.botaoAdicionando,
         ]}
         onPress={escolherPDF}
+        disabled={enviando}
         accessibilityRole="button"
       >
         <View style={s.botaoAdicionarIcone}>
@@ -335,6 +335,19 @@ export default function Biblioteca() {
         visible={erroConexao}
         message="Não foi possível carregar sua biblioteca. Verifique sua conexão com a internet e puxe a tela para baixo para tentar novamente."
       />
+
+      {avisoEnvio ? (
+        <View
+          style={[
+            s.avisoEnvio,
+            avisoEnvio.erro
+              ? s.avisoEnvioErro
+              : s.avisoEnvioSucesso,
+          ]}
+        >
+          <Text style={s.avisoEnvioTexto}>{avisoEnvio.texto}</Text>
+        </View>
+      ) : null}
 
       <View style={s.espaco} />
 
@@ -646,6 +659,31 @@ const s =
 
     espaco: {
       height: 8,
+    },
+
+    avisoEnvio: {
+      marginTop: 10,
+      marginBottom: 4,
+      paddingHorizontal: 14,
+      paddingVertical: 11,
+      borderRadius: 12,
+      borderWidth: 1,
+    },
+
+    avisoEnvioSucesso: {
+      backgroundColor: "#ECFDF3",
+      borderColor: "#A7F3D0",
+    },
+
+    avisoEnvioErro: {
+      backgroundColor: "#FEF2F2",
+      borderColor: "#FECACA",
+    },
+
+    avisoEnvioTexto: {
+      color: "#334155",
+      fontSize: 13,
+      lineHeight: 19,
     },
 
     listaScroll: {
