@@ -934,8 +934,17 @@ export default function QuestaoScreen() {
     resultado
       ? removerMetadadosDaResposta(
           limparTextoIA(resultado.resposta)
+        ).replace(
+          /^\s*Alternativa correta\s*:\s*\(?[A-Ea-e]\)?[.:\s)-]*/i,
+          ""
         )
       : "";
+
+  const leituraFalhou =
+    !!resultado &&
+    !resultado.alternativa &&
+    !resultado.pagina &&
+    confiancaPercentual === 0;
 
   const explicacaoLimpa =
     resultado?.explicacao
@@ -1343,7 +1352,31 @@ export default function QuestaoScreen() {
 
       {resultado ? (
         <>
-          {!resultado
+          {leituraFalhou ? (
+            <View style={s.avisoNaoConfirmado}>
+              <Text style={s.avisoNaoConfirmadoTitulo}>
+                📷 Não consegui ler a foto
+              </Text>
+
+              <Text style={s.avisoNaoConfirmadoTexto}>
+                Aproxime a câmera da questão, deixe o texto bem iluminado e
+                evite reflexos. Fotografar uma tela de computador costuma
+                dar listras: prefira papel ou um print.
+              </Text>
+
+              <Text style={[s.avisoNaoConfirmadoTexto, { marginTop: 8, fontWeight: "800" }]}>
+                Esta tentativa não conta no seu limite.
+              </Text>
+
+              <Pressable
+                accessibilityRole="button"
+                style={s.abrirPdfBotao}
+                onPress={refazerFoto}
+              >
+                <Text style={s.abrirPdfTexto}>📷 Tirar outra foto</Text>
+              </Pressable>
+            </View>
+          ) : !resultado
             .confirmadoPeloMaterial ? (
             <View
               style={
@@ -1396,7 +1429,7 @@ export default function QuestaoScreen() {
             </View>
           )}
 
-          {resultado
+          {!leituraFalhou && resultado
             .alternativa ? (
             <View
               style={
@@ -1424,6 +1457,7 @@ export default function QuestaoScreen() {
             </View>
           ) : null}
 
+          {leituraFalhou ? null : (
           <View style={s.card}>
             <Text style={s.label}>
               RESPOSTA
@@ -1466,7 +1500,9 @@ export default function QuestaoScreen() {
               </Pressable>
             ) : null}
           </View>
+          )}
 
+          {leituraFalhou ? null : (
           <View
             style={
               s.informacoesLinha
@@ -1509,6 +1545,7 @@ export default function QuestaoScreen() {
               </Text>
             </View>
           </View>
+          )}
 
           {resultado.pagina ? (
             <View style={s.card}>

@@ -49,6 +49,7 @@ Fase 4 - Mapa Mental
 Fase 5 - Fonte e confianca
 - [x] Camera no celular (web/iOS): usa a camera nativa do aparelho (foco, zoom, flash, alta resolucao); desktop segue com camera do navegador. Android app ja usa camera nativa
 - [x] Resultado da questao: explicacao recolhida ("Ver explicacao completa"), etapas durante a analise, imagem sem faixa cinza, nome da apostila legivel
+- [x] Foto ilegivel: aviso com dica, botao "Tirar outra foto" e uso devolvido (answer-question usa refund_feature_usage)
 - [ ] Miniatura da foto no resultado (toque abre em tela cheia)
 - [x] Fonte da resposta (apostila, pagina e botao "Abrir PDF na pagina N" em questao e historico; trecho exato fica para depois)
 - [ ] Questao digitada: alem de fotografar, permitir que o usuario ESCREVA uma
