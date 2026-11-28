@@ -282,7 +282,11 @@ export default function MercadoPagoPlusCard({
               ...(email ? { payer: { email } } : {}),
             },
             customization: {
-              paymentMethods: { minInstallments: 1, maxInstallments: 1 },
+              paymentMethods: {
+                minInstallments: 1,
+                maxInstallments: 1,
+                types: { excluded: ["debit_card"] },
+              },
             },
             callbacks: {
               onReady: () => {},
@@ -460,8 +464,8 @@ export default function MercadoPagoPlusCard({
         </>
       ) : (
         <>
-          {offer?.webSubscriptionStatus === "pending" ||
-          offer?.webSubscriptionStatus === "authorized" ? (
+          {showCardForm ? null : offer?.webSubscriptionStatus === "pending" ||
+            offer?.webSubscriptionStatus === "authorized" ? (
             <Text style={styles.description}>
               Checkout iniciado. Continue o pagamento ou aguarde a confirmação
               do Mercado Pago.
