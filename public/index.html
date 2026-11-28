@@ -5,15 +5,35 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover" />
     <meta name="theme-color" content="#0B3FA8" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="format-detection" content="telephone=no" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="EstudaIA" />
     <link rel="manifest" href="manifest.webmanifest" />
-    <link rel="apple-touch-icon" href="icons/icon-192.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon-180.png" />
     <title>EstudaIA</title>
     <style id="expo-reset">
-      html, body { height: 100%; }
-      body { overflow: hidden; }
+      /* Medidas para iPhone/iPad (Safari e app na tela inicial). */
+      html {
+        height: 100%;
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+        -webkit-tap-highlight-color: transparent;
+      }
+      body {
+        height: 100%;
+        overflow: hidden;
+        overscroll-behavior: none;
+        touch-action: manipulation;
+        -webkit-font-smoothing: antialiased;
+      }
+      /* dvh acompanha a barra do Safari ao aparecer e esconder. */
+      @supports (height: 100dvh) {
+        html, body { height: 100dvh; }
+      }
+      /* Campos com menos de 16px fazem o iOS dar zoom ao tocar. */
+      input, textarea, select { font-size: 16px; }
       #root { display: flex; height: 100%; flex: 1; }
     </style>
     <script src="register-sw.js" defer></script>
