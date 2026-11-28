@@ -108,6 +108,7 @@ export default function MapaMentalScreen() {
     useState<Set<string>>(new Set());
 
   const scrollRef = useRef<any>(null);
+  const primeiraCarga = useRef(true);
   const areaMapaY = useRef(0);
   const posicaoRamos = useRef<Record<string, number>>({});
 
@@ -385,12 +386,18 @@ export default function MapaMentalScreen() {
         );
       } finally {
         setCarregando(false);
+        primeiraCarga.current = false;
       }
     }, [id]);
 
   useFocusEffect(
     useCallback(() => {
-      setCarregando(true);
+      // Tela cheia de carregamento so na primeira vez; ao voltar de outra
+      // tela, atualiza em segundo plano e mantem a posicao de rolagem.
+      if (primeiraCarga.current) {
+        setCarregando(true);
+      }
+
       carregarDados();
     }, [carregarDados])
   );
