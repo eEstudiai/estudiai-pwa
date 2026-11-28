@@ -282,6 +282,7 @@ export default function MercadoPagoPlusCard({
               ...(email ? { payer: { email } } : {}),
             },
             customization: {
+              visual: { hideFormTitle: true },
               paymentMethods: {
                 minInstallments: 1,
                 maxInstallments: 1,
@@ -486,6 +487,7 @@ export default function MercadoPagoPlusCard({
           offer.webSubscriptionStatus !== "authorized" ? (
             showCardForm ? (
               <>
+                <Text style={styles.cardFormTitle}>Cartão de crédito</Text>
                 <View
                   nativeID={CARD_BRICK_CONTAINER_ID}
                   style={styles.cardBrick}
@@ -670,7 +672,13 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     marginTop: 12,
   },
-  cardBrick: { marginTop: 16, minHeight: 120, width: "100%" },
+  cardFormTitle: {
+    color: "#0B1B32",
+    fontSize: 16,
+    fontWeight: "800",
+    marginTop: 16,
+  },
+  cardBrick: { marginTop: 8, minHeight: 120, width: "100%" },
   pressed: { opacity: 0.8 },
   disabled: { opacity: 0.5 },
 });
