@@ -1472,7 +1472,9 @@ export default function QuestaoScreen() {
 
           <View style={{ gap: 8, marginTop: 6, alignSelf: "stretch", paddingHorizontal: 12 }}>
             {[
-              "Lendo a imagem da questão",
+              perguntaEnviada
+                ? "Entendendo a sua pergunta"
+                : "Lendo a imagem da questão",
               "Buscando nas suas apostilas",
               "Preparando a resposta",
             ].map((texto, i) => (
