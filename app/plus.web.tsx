@@ -65,7 +65,7 @@ export default function PlusWebScreen() {
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.container}>
-      <Pressable accessibilityRole="button" onPress={() => router.back()} style={styles.back}>
+      <Pressable accessibilityRole="button" onPress={() => (router.canGoBack() ? router.back() : router.replace("/"))} style={styles.back}>
         <Text style={styles.backText}>‹ Voltar</Text>
       </Pressable>
 
