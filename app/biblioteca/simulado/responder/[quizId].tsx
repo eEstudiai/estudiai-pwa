@@ -10,7 +10,6 @@ import {
   ScrollView,
   Pressable,
   ActivityIndicator,
-  Alert,
 } from "react-native";
 
 import {
@@ -22,6 +21,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { supabase } from "../../../../services/supabase";
+import { avisar } from "../../../../services/avisos";
 
 type Alternativas = {
   A: string;
@@ -386,7 +386,7 @@ export default function ResponderSimuladoScreen() {
           userError ||
           !user
         ) {
-          Alert.alert(
+          avisar(
             "Erro",
             "Usuário não autenticado."
           );
@@ -450,7 +450,7 @@ export default function ResponderSimuladoScreen() {
             tentativaError
           );
 
-          Alert.alert(
+          avisar(
             "Erro",
             "Não foi possível salvar o resultado do simulado."
           );
@@ -511,7 +511,7 @@ export default function ResponderSimuladoScreen() {
               user.id
             );
 
-          Alert.alert(
+          avisar(
             "Erro",
             "Não foi possível salvar todas as respostas do simulado."
           );
@@ -523,7 +523,7 @@ export default function ResponderSimuladoScreen() {
           true
         );
 
-        Alert.alert(
+        avisar(
           "Resultado salvo",
           "Sua tentativa foi registrada com sucesso."
         );
@@ -533,7 +533,7 @@ export default function ResponderSimuladoScreen() {
           error
         );
 
-        Alert.alert(
+        avisar(
           "Erro",
           "Não foi possível salvar o resultado."
         );

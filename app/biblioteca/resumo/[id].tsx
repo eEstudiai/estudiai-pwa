@@ -10,7 +10,6 @@ import {
   ScrollView,
   Pressable,
   ActivityIndicator,
-  Alert,
   RefreshControl,
 } from "react-native";
 
@@ -23,6 +22,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { supabase } from "../../../services/supabase";
+import { avisar } from "../../../services/avisos";
 
 type TipoResumo =
   | "short"
@@ -281,7 +281,7 @@ export default function ResumoMaterialScreen() {
       if (
         material.status !== "ready"
       ) {
-        Alert.alert(
+        avisar(
           "Apostila ainda não preparada",
           "Esta apostila ainda precisa ser preparada para que a IA possa gerar o resumo."
         );
@@ -341,7 +341,7 @@ export default function ResumoMaterialScreen() {
           ) {
             setIaHabilitada(false);
 
-            Alert.alert(
+            avisar(
               "Resumo com IA desativado",
               respostaErro?.error ||
                 "A geração foi bloqueada pelo servidor. Nenhum crédito da API foi utilizado."
@@ -356,7 +356,7 @@ export default function ResumoMaterialScreen() {
             respostaErro?.reason ===
               "limit_reached"
           ) {
-            Alert.alert(
+            avisar(
               "Limite de resumos atingido",
               respostaErro?.error ||
                 "Você atingiu o limite de resumos disponível no seu plano."
@@ -365,7 +365,7 @@ export default function ResumoMaterialScreen() {
             return;
           }
 
-          Alert.alert(
+          avisar(
             "Não foi possível gerar",
             respostaErro?.error ||
               respostaErro?.message ||
@@ -382,7 +382,7 @@ export default function ResumoMaterialScreen() {
         ) {
           setIaHabilitada(false);
 
-          Alert.alert(
+          avisar(
             "Resumo com IA desativado",
             "A geração foi bloqueada pelo servidor. Nenhum crédito da API foi utilizado."
           );
@@ -397,7 +397,7 @@ export default function ResumoMaterialScreen() {
             data.summary as Resumo
           );
 
-          Alert.alert(
+          avisar(
             data.cached
               ? "Resumo carregado"
               : "Resumo gerado",
@@ -409,7 +409,7 @@ export default function ResumoMaterialScreen() {
           return;
         }
 
-        Alert.alert(
+        avisar(
           "Não foi possível gerar",
           data?.error ||
             "O servidor não retornou um resumo."
@@ -420,7 +420,7 @@ export default function ResumoMaterialScreen() {
           error
         );
 
-        Alert.alert(
+        avisar(
           "Erro",
           "Não foi possível comunicar com o servidor."
         );

@@ -18,6 +18,7 @@ import {
 import { supabase } from "../services/supabase";
 import BottomNav from "../components/BottomNav";
 import PromotionalNotificationsOnboarding from "../components/PromotionalNotificationsOnboarding";
+import AvisoGlobal from "../components/AvisoGlobal";
 
 function AuthGate() {
   const segments = useSegments();
@@ -104,6 +105,8 @@ function AuthGate() {
       {mostrarBarra ? <BottomNav /> : null}
 
       <PromotionalNotificationsOnboarding />
+
+      <AvisoGlobal />
     </View>
   );
 }

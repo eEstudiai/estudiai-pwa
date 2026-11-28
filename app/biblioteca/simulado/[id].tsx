@@ -10,7 +10,6 @@ import {
   ScrollView,
   Pressable,
   ActivityIndicator,
-  Alert,
   RefreshControl,
 } from "react-native";
 
@@ -23,6 +22,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { supabase } from "../../../services/supabase";
+import { avisar } from "../../../services/avisos";
 
 type Material = {
   id: string;
@@ -281,7 +281,7 @@ export default function SimuladoMaterialScreen() {
         material.status !==
         "ready"
       ) {
-        Alert.alert(
+        avisar(
           "Apostila ainda não preparada",
           "Esta apostila precisa ser preparada antes que a IA possa gerar o simulado."
         );
@@ -290,7 +290,7 @@ export default function SimuladoMaterialScreen() {
       }
 
       if (!iaHabilitada) {
-        Alert.alert(
+        avisar(
           "Simulado com IA desativado",
           "A geração de novos simulados está temporariamente desativada. Simulados já salvos continuam disponíveis normalmente."
         );
@@ -331,7 +331,7 @@ export default function SimuladoMaterialScreen() {
               ?.context?.status;
 
           if (status === 429) {
-            Alert.alert(
+            avisar(
               "Limite de simulados atingido",
               "Você já utilizou todos os simulados disponíveis no seu plano. Consulte o EstudaIA Plus para ampliar seus limites."
             );
@@ -339,7 +339,7 @@ export default function SimuladoMaterialScreen() {
             return;
           }
 
-          Alert.alert(
+          avisar(
             "Não foi possível gerar",
             "O servidor não conseguiu gerar o simulado. Tente novamente em alguns instantes."
           );
@@ -353,7 +353,7 @@ export default function SimuladoMaterialScreen() {
         ) {
           setIaHabilitada(false);
 
-          Alert.alert(
+          avisar(
             "Simulado com IA desativado",
             "A geração foi bloqueada pelo servidor. Nenhum crédito da API foi utilizado."
           );
@@ -364,7 +364,7 @@ export default function SimuladoMaterialScreen() {
         if (data?.quiz) {
           await carregarDados();
 
-          Alert.alert(
+          avisar(
             "Simulado gerado",
             `O simulado com ${
               data.quiz
@@ -376,7 +376,7 @@ export default function SimuladoMaterialScreen() {
           return;
         }
 
-        Alert.alert(
+        avisar(
           "Não foi possível gerar",
           data?.error ||
             "O servidor não retornou um simulado."
@@ -387,7 +387,7 @@ export default function SimuladoMaterialScreen() {
           error
         );
 
-        Alert.alert(
+        avisar(
           "Erro",
           "Não foi possível comunicar com o servidor."
         );

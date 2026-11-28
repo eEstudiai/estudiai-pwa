@@ -12,7 +12,6 @@ import {
   Pressable,
   ActivityIndicator,
   RefreshControl,
-  Alert,
 } from "react-native";
 
 import {
@@ -22,6 +21,7 @@ import {
 } from "expo-router";
 
 import { supabase } from "../../../services/supabase";
+import { avisar } from "../../../services/avisos";
 
 type Material = {
   id: string;
@@ -392,7 +392,7 @@ export default function MapaMentalScreen() {
     }
 
     if (!iaHabilitada) {
-      Alert.alert(
+      avisar(
         "IA desativada",
         "A geração de mapa mental por IA está temporariamente desativada."
       );
@@ -400,7 +400,7 @@ export default function MapaMentalScreen() {
     }
 
     if (material.status !== "ready") {
-      Alert.alert(
+      avisar(
         "Apostila não preparada",
         "Prepare esta apostila para estudo antes de gerar o mapa mental."
       );
@@ -463,7 +463,7 @@ export default function MapaMentalScreen() {
           );
         }
 
-        Alert.alert(
+        avisar(
           "Erro ao gerar mapa",
           mensagem
         );
@@ -475,7 +475,7 @@ export default function MapaMentalScreen() {
         data &&
         data.ok === false
       ) {
-        Alert.alert(
+        avisar(
           "Erro ao gerar mapa",
           data.error ||
             "Não foi possível gerar o mapa mental."
@@ -490,7 +490,7 @@ export default function MapaMentalScreen() {
 
       await carregarDados();
 
-      Alert.alert(
+      avisar(
         "Mapa mental criado",
         "O mapa mental foi gerado e salvo com sucesso."
       );
@@ -500,7 +500,7 @@ export default function MapaMentalScreen() {
         error
       );
 
-      Alert.alert(
+      avisar(
         "Erro",
         "Ocorreu um erro inesperado ao gerar o mapa mental."
       );
